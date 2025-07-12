@@ -35,12 +35,13 @@
     </div>
     <script src="script.js"></script>
     <script>
+        const BACKEND_URL = 'https://learnify-y02m.onrender.com';
         // Check authentication and role on page load
         if (!localStorage.getItem('learnify_token')) {
             window.location.href = '/index.html';
         }
         // Role check: if teacher, redirect to teacher dashboard
-        fetch('/api/auth/me', { headers: getAuthHeaders() })
+        fetch(`${BACKEND_URL}/api/auth/me`, { headers: getAuthHeaders() })
             .then(res => res.json())
             .then(user => {
                 if (user && user.role === 'teacher') {
@@ -115,7 +116,7 @@
         async function loadToDo() {
             try {
                 // Get enrolled classes
-                const classesResponse = await fetch('/api/classroom/my', { headers: getAuthHeaders() });
+                const classesResponse = await fetch(`${BACKEND_URL}/api/classroom/my`, { headers: getAuthHeaders() });
                 const classes = await classesResponse.json();
                 if (!classes || classes.length === 0) {
                     document.getElementById('todoList').innerHTML = '<div class="no-assignments">No classes enrolled yet.</div>';
@@ -124,11 +125,11 @@
                 let todoHtml = '';
                 for (const cls of classes) {
                     // Get assignments for this class
-                    const assignmentsResponse = await fetch(`/api/post?classID=${cls._id}`, { headers: getAuthHeaders() });
+                    const assignmentsResponse = await fetch(`${BACKEND_URL}/api/post?classID=${cls._id}`, { headers: getAuthHeaders() });
                     const posts = await assignmentsResponse.json();
                     const assignments = posts.filter(p => p.type === 'assignment');
                     // Get student's submissions for this class
-                    const submissionsResponse = await fetch(`/api/assignment/student-submissions?classID=${cls._id}`, { headers: getAuthHeaders() });
+                    const submissionsResponse = await fetch(`${BACKEND_URL}/api/assignment/student-submissions?classID=${cls._id}`, { headers: getAuthHeaders() });
                     const submissions = await submissionsResponse.json();
                     // Create submission map for easy lookup
                     const submissionMap = {};
@@ -170,15 +171,15 @@
             }
         }
         async function showResult() {
-            const userResponse = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+            const userResponse = await fetch(`${BACKEND_URL}/api/auth/me`, { headers: getAuthHeaders() });
             const user = await userResponse.json();
 
             let seatNumber = user.seatNumber;
             try {
-                const classesResponse = await fetch('/api/classroom/my', { headers: getAuthHeaders() });
+                const classesResponse = await fetch(`${BACKEND_URL}/api/classroom/my`, { headers: getAuthHeaders() });
                 const classes = await classesResponse.json();
                 for (const cls of classes) {
-                    const submissionsResponse = await fetch(`/api/assignment/student-submissions?classID=${cls._id}`, { headers: getAuthHeaders() });
+                    const submissionsResponse = await fetch(`${BACKEND_URL}/api/assignment/student-submissions?classID=${cls._id}`, { headers: getAuthHeaders() });
                     const submissions = await submissionsResponse.json();
                     if (submissions && submissions.length > 0 && submissions[0].studentID && submissions[0].studentID.seatNumber) {
                         seatNumber = submissions[0].studentID.seatNumber;
@@ -210,7 +211,7 @@
         async function loadStudentResults() {
             try {
                 // Get student information
-                const userResponse = await fetch('/api/auth/me', {
+                const userResponse = await fetch(`${BACKEND_URL}/api/auth/me`, {
                     headers: getAuthHeaders()
                 });
                 const user = await userResponse.json();
@@ -220,7 +221,7 @@
                 // (No longer needed: info-grid)
 
                 // Get enrolled classes
-                const classesResponse = await fetch('/api/classroom/my', {
+                const classesResponse = await fetch(`${BACKEND_URL}/api/classroom/my`, {
                     headers: getAuthHeaders()
                 });
                 const classes = await classesResponse.json();
@@ -233,14 +234,14 @@
                 let classResultsHtml = '';
                 for (const cls of classes) {
                     // Get assignments for this class
-                    const assignmentsResponse = await fetch(`/api/post?classID=${cls._id}`, {
+                    const assignmentsResponse = await fetch(`${BACKEND_URL}/api/post?classID=${cls._id}`, {
                         headers: getAuthHeaders()
                     });
                     const posts = await assignmentsResponse.json();
                     const assignments = posts.filter(p => p.type === 'assignment');
 
                     // Get student's submissions for this class
-                    const submissionsResponse = await fetch(`/api/assignment/student-submissions?classID=${cls._id}`, {
+                    const submissionsResponse = await fetch(`${BACKEND_URL}/api/assignment/student-submissions?classID=${cls._id}`, {
                         headers: getAuthHeaders()
                     });
                     const submissions = await submissionsResponse.json();
@@ -317,7 +318,7 @@
 
         // Load student classes into a given element
         function loadClasses(listId) {
-            fetch('/api/classroom/my', {
+            fetch(`${BACKEND_URL}/api/classroom/my`, {
                 headers: getAuthHeaders()
             })
                 .then(res => {
@@ -369,7 +370,7 @@
 
         function leaveClass(classId) {
             if (confirm('Are you sure you want to leave this class? All related assignments will be removed.')) {
-                fetch(`/api/classroom/leave`, {
+                fetch(`${BACKEND_URL}/api/classroom/leave`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ classId })
