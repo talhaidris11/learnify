@@ -632,6 +632,7 @@
 
     <script src="script.js"></script>
     <script>
+        const BACKEND_URL = 'https://learnify-y02m.onrender.com';
         // Check authentication on page load
         if (!localStorage.getItem('learnify_token')) {
             window.location.href = '/index.html';
@@ -652,7 +653,7 @@
 
         // Show correct dashboard link and load user data
         console.log('Fetching user data...');
-        fetch('/api/auth/me', {
+        fetch(`${BACKEND_URL}/api/auth/me`, {
             headers: getAuthHeaders()
         })
             .then(res => {
@@ -705,7 +706,7 @@
             });
 
         function loadClassData() {
-            fetch(`/api/classroom/${classId}`, {
+            fetch(`${BACKEND_URL}/api/classroom/${classId}`, {
                 headers: getAuthHeaders()
             })
                 .then(res => {
@@ -738,7 +739,7 @@
 
         // Fetch student submissions for this class
         function fetchStudentSubmissions() {
-            fetch(`/api/assignment/student-submissions?classID=${classId}`, {
+            fetch(`${BACKEND_URL}/api/assignment/student-submissions?classID=${classId}`, {
                 headers: getAuthHeaders()
             })
                 .then(res => {
@@ -766,7 +767,7 @@
         }
 
         function loadPosts() {
-            fetch(`/api/post?classID=${classId}`, {
+            fetch(`${BACKEND_URL}/api/post?classID=${classId}`, {
                 headers: getAuthHeaders()
             })
                 .then(res => {
@@ -882,7 +883,7 @@
         // Teacher: Delete assignment/post
         window.deleteAssignment = function (postId) {
             if (confirm('Are you sure you want to delete this assignment/post? This action cannot be undone.')) {
-                fetch(`/api/post/${postId}`, {
+                fetch(`${BACKEND_URL}/api/post/${postId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders()
                 })
@@ -990,7 +991,7 @@
                 formData.append('classID', classId);
 
                 try {
-                    const res = await fetch('/api/post/create', {
+                    const res = await fetch(`${BACKEND_URL}/api/post/create`, {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -1029,7 +1030,7 @@
                     console.log('FormData:', key, value);
                 }
                 try {
-                    const res = await fetch('/api/assignment/submit', {
+                    const res = await fetch(`${BACKEND_URL}/api/assignment/submit`, {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -1062,7 +1063,7 @@
         // Add this function after showAssignmentSubmit
         window.unsubmitAssignment = function (submissionId, assignmentId) {
             if (confirm('Are you sure you want to unsubmit your assignment?')) {
-                fetch(`/api/assignment/submission/${submissionId}`, {
+                fetch(`${BACKEND_URL}/api/assignment/submission/${submissionId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders()
                 })
@@ -1085,7 +1086,7 @@
             document.getElementById('modalTitle').textContent = `Submissions for: ${assignmentTitle}`;
             document.getElementById('submissionsModal').style.display = 'block';
 
-            fetch(`/api/assignment/submissions?assignmentID=${assignmentID}`, {
+            fetch(`${BACKEND_URL}/api/assignment/submissions?assignmentID=${assignmentID}`, {
                 headers: getAuthHeaders()
             })
                 .then(res => {
@@ -1297,7 +1298,7 @@
                 updateAssignmentFields(this.value, editPostDueDateSection, editPostTotalMarksSection, editPostTotalMarksInput);
             });
             // Fetch post data to populate the form
-            fetch(`/api/post/single/${postId}`, {
+            fetch(`${BACKEND_URL}/api/post/single/${postId}`, {
                 headers: getAuthHeaders()
             })
                 .then(res => {
@@ -1379,7 +1380,7 @@
                 const formData = new FormData(editPostForm);
                 // Do NOT append postId to formData; use it in the URL
                 try {
-                    const res = await fetch(`/api/post/${postId}`, {
+                    const res = await fetch(`${BACKEND_URL}/api/post/${postId}`, {
                         method: 'PUT',
                         body: formData,
                         headers: {
