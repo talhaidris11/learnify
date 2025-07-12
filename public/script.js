@@ -25,7 +25,7 @@ window.onload = function () {
             const password = formData.get('password');
 
             try {
-                const res = await fetch('https://learnify-y02m.onrender.com/login', {
+                const res = await fetch(`${BACKEND_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ username, password })
@@ -63,7 +63,7 @@ window.onload = function () {
                 payload.seatNumber = formData.get('seatNumber');
             }
             try {
-                const res = await fetch('https://learnify-y02m.onrender.com/register', {
+                const res = await fetch(`${BACKEND_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -154,7 +154,7 @@ async function renderToReview() {
     toReviewSection.innerHTML = '<div class="loading">Loading submissions...</div>';
 
     try {
-        const response = await fetch('https://learnify-y02m.onrender.com/api/assignments/to-review', {
+        const response = await fetch(`${BACKEND_URL}/api/assignments/to-review`, {
             headers: getAuthHeaders()
         });
         const data = await response.json();
@@ -240,7 +240,7 @@ async function validateAndUpdateMarks(submissionId, marks, totalMarks) {
     }
 
     try {
-        const response = await fetch(`https://learnify-y02m.onrender.com/api/assignments/submission/${submissionId}/marks`, {
+        const response = await fetch(`${BACKEND_URL}/api/assignments/submission/${submissionId}/marks`, {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify({ marks })
