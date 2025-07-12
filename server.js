@@ -36,7 +36,7 @@ function verifyToken(req, res, next) {
 }
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/learnify')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/learnify')
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => {
         console.log('MongoDB connection failed:', err.message);
