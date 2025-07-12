@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Class - Learnify</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .submission-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+
+        .submission-student {
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .submission-email {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .submission-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .submission-file {
+            margin-top: 10px;
+        }
+
+        .submission-file a {
+            color: #43a047;
+            text-decoration: none;
+        }
+
+        .submission-file a:hover {
+            text-decoration: underline;
+        }
+
+        .no-submissions {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .post-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 12px #0001;
+            padding: 1.5rem 2.2rem 1.5rem 1.5rem;
+            margin-bottom: 2.5rem;
+            border-left: 6px solid #43a047;
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.7rem;
+        }
+
+        .post-type {
+            background: #1976d2;
+            color: white;
+            padding: 3px 14px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px #0001;
+        }
+
+        .post-content {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .post-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .post-file {
+            margin-bottom: 1rem;
+        }
+
+        .post-file a {
+            color: #1976d2;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-file a:hover {
+            text-decoration: underline;
+        }
+
+        .due-date {
+            background: #ff9800;
+            color: white;
+            padding: 3px 14px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 0.5rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px #0001;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 0.7rem;
+            margin-top: 0.7rem;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+            border-radius: 16px;
+            padding: 7px 18px;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+
+        .btn-success {
+            background: #43a047;
+            color: white;
+            border-radius: 16px;
+            padding: 7px 18px;
+            font-size: 1rem;
+        }
+
+        .btn-success:hover {
+            background: #388e3c;
+        }
+
+        .btn-danger {
+            background: #e53935;
+            color: white;
+            border-radius: 16px;
+            padding: 7px 18px;
+            font-size: 1rem;
+        }
+
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border-radius: 16px;
+            padding: 7px 18px;
+            font-size: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: #495057;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+        }
+
+        .error {
+            text-align: center;
+            color: #f44336;
+            padding: 2rem;
+        }
+
+        /* File Preview Styles */
+        .file-preview-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .file-preview-content {
+            background-color: #fff;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .file-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-preview-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .file-preview-close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .file-preview-close:hover {
+            color: #000;
+        }
+
+        .file-preview-body {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .file-preview-image {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-preview-pdf {
+            width: 100%;
+            height: 70vh;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-preview-text {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+        }
+
+        .file-preview-unsupported {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .file-preview-unsupported i {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .file-preview-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .file-preview-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .file-preview-btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .file-preview-btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .file-preview-btn:hover {
+            opacity: 0.9;
+        }
+
+        .file-preview-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .file-preview-loading i {
+            font-size: 2rem;
+            color: #1976d2;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* UI Enhancements */
+        .back-btn {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px #0002;
+            transition: background-color 0.3s ease;
+            margin-left: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .back-btn i {
+            font-size: 1.1rem;
+        }
+
+        .back-btn:hover {
+            background-color: #0a58ca;
+        }
+
+        .back-btn-green {
+            background: #43a047;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 0.55rem 1.5rem 0.55rem 1.1rem;
+            font-size: 1.08rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            box-shadow: 0 2px 8px #0002;
+            transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+            margin-right: 1.2rem;
+            margin-left: 0;
+            cursor: pointer;
+        }
+
+        .back-btn-green i {
+            font-size: 1.2rem;
+        }
+
+        .back-btn-green:hover {
+            background: #388e3c;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+        }
+
+        /* Header Title */
+        .class-header-bar {
+            background-color: #1976d2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .class-title {
+            color: white !important;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            flex: 1;
+        }
+
+        /* Edit & View Buttons */
+        .btn-primary {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #0a58ca;
+        }
+
+        /* Unsubmit */
+        .btn-unsubmit {
+            background-color: #28a745;
+            color: white;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .btn-unsubmit:hover {
+            background-color: #218838;
+        }
+
+        /* Trash Icon Button */
+        .delete-class-btn {
+            background-color: transparent;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .delete-class-btn i {
+            color: #e53935;
+            font-size: 0.9rem;
+            transition: transform 0.2s;
+        }
+
+        .delete-class-btn i:hover {
+            transform: scale(1.2);
+        }
+
+        /* Card spacing */
+        .post-card {
+            margin-bottom: 1.8rem;
+            padding: 1.5rem;
+        }
+
+        /* Fix button spacing */
+        .post-actions .btn,
+        .post-actions .delete-class-btn {
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="class-header-bar">
+        <button id="backToDashboardBtn" class="back-btn-green"><i class="fas fa-arrow-left"></i> Back</button>
+        <span class="class-title">Internet Application Development - I</span>
+        <span class="class-code-badge">COTBHD</span>
+    </header>
+    <main>
+        <section id="postsSection">
+            <div id="postsList">
+                <div class="no-posts">No posts yet. Teachers can create announcements and assignments.</div>
+            </div>
+        </section>
+        <section id="postFormSection" style="margin-top:2rem;">
+            <!-- Only teachers can see this form -->
+            <form id="postForm" enctype="multipart/form-data"
+                style="display:none; background: #fff; box-shadow: 0 2px 12px #0001; border-radius: 14px; padding: 2rem; max-width: 420px; margin: 2rem auto 0 auto;">
+                <h4 style="color: #1976d2; margin-bottom: 1rem;">Create New Post</h4>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <select name="type" required
+                        style="padding: 0.7rem; border-radius: 6px; border: 1px solid #e0e0e0;">
+                        <option value="announcement">Announcement</option>
+                        <option value="assignment">Assignment</option>
+                    </select>
+                    <input type="text" name="content" placeholder="Write something..." required autocomplete="off"
+                        style="padding: 0.7rem; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                        <label for="file" style="font-size: 0.95em; color: #888;">Attachment (optional):</label>
+                        <input type="file" name="file" id="file" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                            autocomplete="off" style="padding: 0.3rem; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    </div>
+                    <div id="dueDateSection" style="display:none;">
+                        <label for="dueDate" style="font-size: 0.95em; color: #888;">Due Date:</label>
+                        <input type="datetime-local" name="dueDate" id="dueDate" autocomplete="off"
+                            style="padding: 0.7rem; border-radius: 6px; border: 1px solid #e0e0e0;">
+                    </div>
+                    <div id="totalMarksSection" style="display:none;">
+                        <label for="totalMarks" style="font-size: 0.95em; color: #888;">Total Marks:</label>
+                        <input type="number" name="totalMarks" id="totalMarks" min="1" step="1" autocomplete="off"
+                            style="padding: 0.7rem; border-radius: 6px; border: 1px solid #e0e0e0;" required>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="margin-top: 0.5rem;">Post</button>
+                </div>
+            </form>
+        </section>
+        <section id="assignmentSubmitSection" style="margin-top:2rem; display:none;">
+            <!-- Only students see this when an assignment is selected -->
+            <form id="assignmentSubmitForm" enctype="multipart/form-data">
+                <h4>Submit Assignment</h4>
+                <input type="file" name="file" required accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    autocomplete="off">
+                <button type="submit" class="btn btn-success">Submit Assignment</button>
+            </form>
+            <div id="assignmentSubmitMsg"></div>
+        </section>
+    </main>
+
+    <!-- Submissions Modal -->
+    <div id="submissionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSubmissionsModal()">&times;</span>
+            <h3 id="modalTitle">Assignment Submissions</h3>
+            <div id="submissionsList"></div>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div id="filePreviewModal" class="file-preview-modal">
+        <div class="file-preview-content">
+            <div class="file-preview-header">
+                <div class="file-preview-title" id="filePreviewTitle">File Preview</div>
+                <button class="file-preview-close" onclick="closeFilePreview()">&times;</button>
+            </div>
+            <div class="file-preview-body" id="filePreviewBody">
+                <div class="file-preview-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>Loading preview...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Post Modal -->
+    <div id="editPostModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditPostModal()">&times;</span>
+            <h3>Edit Post/Assignment</h3>
+            <form id="editPostForm" enctype="multipart/form-data">
+                <input type="hidden" name="postId" id="editPostId">
+                <div style="margin-bottom: 1rem;">
+                    <label>Type:</label>
+                    <select name="type" id="editPostType" required>
+                        <option value="announcement">Announcement</option>
+                        <option value="assignment">Assignment</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label>Content:</label>
+                    <textarea name="content" id="editPostContent" required style="width:100%;height:80px;"></textarea>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label>Due Date (for assignments):</label>
+                    <input type="datetime-local" name="dueDate" id="editPostDueDate">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label>File:</label>
+                    <input type="file" name="file" id="editPostFile" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+                    <div id="editPostCurrentFile" style="margin-top:0.5rem;"></div>
+                </div>
+                <button type="submit" class="btn btn-success">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Check authentication on page load
+        if (!localStorage.getItem('learnify_token')) {
+            window.location.href = '/index.html';
+        }
+
+        // Get class ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get('id');
+        let userRole = null;
+        let userId = null;
+        let studentSubmissions = {};
+
+        // Early validation
+        if (!classId || classId === 'null') {
+            alert('Invalid class link. Redirecting to dashboard...');
+            window.location.href = 'dashboard-teacher.html';
+        }
+
+        // Show correct dashboard link and load user data
+        console.log('Fetching user data...');
+        fetch('/api/auth/me', {
+            headers: getAuthHeaders()
+        })
+            .then(res => {
+                console.log('Auth response status:', res.status);
+                if (res.status === 401) {
+                    console.log('Unauthorized - redirecting to login');
+                    localStorage.removeItem('learnify_token');
+                    window.location.href = '/index.html';
+                    return;
+                }
+                return res.json();
+            })
+            .then(user => {
+                if (!user) {
+                    console.log('No user data received');
+                    return;
+                }
+
+                console.log('FRONTEND /api/auth/me response:', user);
+                userRole = user.role;
+                userId = user._id;
+
+                // Show correct back button
+                const btn = document.getElementById('backToDashboardBtn');
+                btn.onclick = function (e) {
+                    e.preventDefault();
+                    if (user && user.role === 'teacher') {
+                        window.location.href = 'dashboard-teacher.html';
+                    } else {
+                        window.location.href = 'dashboard-student.html';
+                    }
+                };
+
+                // Show post form for teachers
+                if (userRole === 'teacher') {
+                    document.getElementById('postForm').style.display = '';
+                }
+
+                // Load class data
+                loadClassData();
+                if (userRole === 'student') {
+                    fetchStudentSubmissions();
+                } else {
+                    loadPosts();
+                }
+            })
+            .catch(err => {
+                console.error('Error loading user data:', err);
+                window.location.href = '/index.html';
+            });
+
+        function loadClassData() {
+            fetch(`/api/classroom/${classId}`, {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(cls => {
+                    if (!cls) return;
+
+                    if (cls.success === false) {
+                        alert('Class not found. Redirecting to dashboard...');
+                        window.location.href = userRole === 'teacher' ? 'dashboard-teacher.html' : 'dashboard-student.html';
+                        return;
+                    }
+                    const classTitleElem = document.getElementById('classTitle');
+                    if (classTitleElem) classTitleElem.textContent = cls.className;
+                    const classCodeElem = document.getElementById('classCode');
+                    if (classCodeElem) classCodeElem.textContent = cls.classCode;
+                })
+                .catch(err => {
+                    console.error('Error loading class data:', err);
+                    const classTitleElem = document.getElementById('classTitle');
+                    if (classTitleElem) classTitleElem.textContent = 'Error loading class';
+                });
+        }
+
+        // Fetch student submissions for this class
+        function fetchStudentSubmissions() {
+            fetch(`/api/assignment/student-submissions?classID=${classId}`, {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+
+                    studentSubmissions = data.reduce((acc, sub) => {
+                        acc[sub.assignmentID] = sub;
+                        return acc;
+                    }, {});
+                    loadPosts();
+                })
+                .catch(err => {
+                    console.error('Error loading student submissions:', err);
+                    studentSubmissions = {};
+                    loadPosts();
+                });
+        }
+
+        function loadPosts() {
+            fetch(`/api/post?classID=${classId}`, {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(posts => {
+                    if (!posts) return;
+
+                    const postsList = document.getElementById('postsList');
+                    if (posts.length === 0) {
+                        postsList.innerHTML = '<div class="no-posts">No posts yet. Teachers can create announcements and assignments.</div>';
+                    } else {
+                        postsList.innerHTML = '';
+                        posts.forEach(post => {
+                            const postCard = createPostCard(post);
+                            postsList.appendChild(postCard);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading posts:', err);
+                    document.getElementById('postsList').innerHTML = '<div class="error">Error loading posts. Please try again.</div>';
+                });
+        }
+
+        function createPostCard(post) {
+            const card = document.createElement('div');
+            card.className = 'post-card';
+
+            const typeLabel = post.type === 'assignment' ? 'Assignment' : 'Announcement';
+            const postedBy = post.postedBy ? (post.postedBy.fullName || post.postedBy.username) : 'Unknown';
+            const postedTime = new Date(post.timestamp).toLocaleString();
+
+            let dueDateHtml = '';
+            if (post.type === 'assignment' && post.dueDate) {
+                const dueDate = new Date(post.dueDate);
+                const now = new Date();
+                const isOverdue = dueDate < now;
+                const dueDateClass = isOverdue ? 'due-date overdue' : 'due-date';
+                dueDateHtml = `<div class="${dueDateClass}">Due: ${dueDate.toLocaleString()}</div>`;
+            }
+
+            let fileHtml = '';
+            if (post.file) {
+                fileHtml = `<div class="post-file">
+                    <a href="#" onclick="previewFile('/uploads/${post.file}', '${post.file}')" style="margin-right: 10px;">
+                        <i class="fas fa-eye"></i> Preview
+                    </a>
+                    <a href="/uploads/${post.file}" target="_blank">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>`;
+            }
+
+            let statusHtml = '';
+            if (post.type === 'assignment' && userRole === 'student') {
+                const submission = studentSubmissions[post._id];
+                const now = new Date();
+                const dueDate = post.dueDate ? new Date(post.dueDate) : null;
+                if (submission) {
+                    statusHtml = '<span style="color: #43a047; font-weight: bold;">Done</span>';
+                } else if (dueDate && dueDate < now) {
+                    statusHtml = '<span style="color: #f44336; font-weight: bold;">Missing</span>';
+                }
+            }
+
+            let actionsHtml = '';
+            if (post.type === 'assignment' && userRole === 'student') {
+                const submission = studentSubmissions[post._id];
+                const now = new Date();
+                const dueDate = post.dueDate ? new Date(post.dueDate) : null;
+                if (!submission && (!dueDate || dueDate >= now)) {
+                    actionsHtml = `<button onclick="showAssignmentSubmit('${post._id}')" class="btn btn-success">Submit Assignment</button>`;
+                } else if (submission && (!dueDate || dueDate >= now)) {
+                    actionsHtml = `<button onclick="unsubmitAssignment('${submission._id}', '${post._id}')" class="btn btn-unsubmit">Unsubmit</button>`;
+                }
+            }
+            if (userRole === 'teacher') {
+                actionsHtml += `<button onclick="showEditPost('${post._id}')" class="btn btn-primary">Edit</button>`;
+                actionsHtml += `<button onclick="deleteAssignment('${post._id}')" class="delete-class-btn" title="Delete Post"><i class='fas fa-trash'></i></button>`;
+            }
+
+            let deadlineMsg = '';
+            if (post.type === 'assignment' && post.dueDate) {
+                const dueDate = new Date(post.dueDate);
+                const now = new Date();
+                if (dueDate < now) {
+                    deadlineMsg = `<div style='color: #f44336; font-weight: bold; margin-top: 0.5rem;'>Deadline has passed</div>`;
+                }
+            }
+
+            card.innerHTML = `
+                <div class="post-header">
+                    <span class="post-type">${typeLabel}</span>
+                </div>
+                <div class="post-content">${post.content}</div>
+                ${fileHtml}
+                <div class="post-meta">Posted by ${postedBy} on ${postedTime}</div>
+                ${dueDateHtml}
+                ${deadlineMsg}
+                ${statusHtml ? `<div class="post-status">${statusHtml}</div>` : ''}
+                ${actionsHtml ? `<div class="post-actions">${actionsHtml}</div>` : ''}
+            `;
+
+            return card;
+        }
+
+        // Teacher: Delete assignment/post
+        window.deleteAssignment = function (postId) {
+            if (confirm('Are you sure you want to delete this assignment/post? This action cannot be undone.')) {
+                fetch(`/api/post/${postId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        loadPosts(); // Always refresh posts
+                        if (!data.success) {
+                            alert('Failed to delete: ' + (data.message || 'Unknown error.'));
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error deleting post. Please try again.');
+                        loadPosts(); // Try to refresh anyway
+                    });
+            }
+        };
+
+        // Add validation for total marks
+        function validateTotalMarks(input) {
+            const feedback = document.getElementById('totalMarks-feedback');
+            const value = Number(input.value);
+
+            if (feedback) {
+                feedback.textContent = '';
+                feedback.className = 'marks-feedback';
+            }
+            input.setCustomValidity('');
+
+            if (!value) {
+                if (feedback) {
+                    feedback.textContent = 'Please enter a valid number';
+                    feedback.classList.add('error');
+                }
+                input.setCustomValidity('Please enter a valid number');
+                return false;
+            }
+
+            if (value <= 0) {
+                if (feedback) {
+                    feedback.textContent = 'Total marks must be greater than 0';
+                    feedback.classList.add('error');
+                }
+                input.setCustomValidity('Total marks must be greater than 0');
+                return false;
+            }
+
+            if (!Number.isInteger(value)) {
+                if (feedback) {
+                    feedback.textContent = 'Total marks must be a whole number';
+                    feedback.classList.add('error');
+                }
+                input.setCustomValidity('Total marks must be a whole number');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Add this function to handle show/hide of due date and total marks for both create and edit forms
+        function updateAssignmentFields(typeValue, dueDateSection, totalMarksSection, totalMarksInput) {
+            if (typeValue === 'assignment') {
+                dueDateSection.style.display = 'block';
+                totalMarksSection.style.display = 'block';
+                if (totalMarksInput) totalMarksInput.required = true;
+            } else {
+                dueDateSection.style.display = 'none';
+                totalMarksSection.style.display = 'none';
+                if (totalMarksInput) {
+                    totalMarksInput.required = false;
+                    totalMarksInput.value = '';
+                }
+                // Also clear due date if not assignment
+                if (dueDateSection.querySelector('input[type="datetime-local"]')) {
+                    dueDateSection.querySelector('input[type="datetime-local"]').value = '';
+                }
+            }
+        }
+
+        // Update form submission to include total marks validation
+        const postForm = document.getElementById('postForm');
+        if (postForm) {
+            const typeSelect = postForm.querySelector('select[name="type"]');
+            const dueDateSection = document.getElementById('dueDateSection');
+            const totalMarksSection = document.getElementById('totalMarksSection');
+            const totalMarksInput = document.getElementById('totalMarks');
+
+            typeSelect.addEventListener('change', function () {
+                updateAssignmentFields(this.value, dueDateSection, totalMarksSection, totalMarksInput);
+            });
+            // Ensure correct initial state on page load
+            updateAssignmentFields(typeSelect.value, dueDateSection, totalMarksSection, totalMarksInput);
+
+            postForm.addEventListener('submit', function (e) {
+                if (typeSelect.value === 'assignment') {
+                    if (!validateTotalMarks(totalMarksInput)) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            });
+
+            postForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(postForm);
+                formData.append('classID', classId);
+
+                try {
+                    const res = await fetch('/api/post/create', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('learnify_token')}`
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        postForm.reset();
+                        updateAssignmentFields(typeSelect.value, dueDateSection, totalMarksSection, totalMarksInput);
+                        loadPosts();
+                    } else {
+                        alert(data.message || 'Failed to create post.');
+                        loadPosts(); // Try to refresh anyway
+                    }
+                } catch (err) {
+                    console.error('Error creating post:', err);
+                    alert('Error creating post. Please try again.');
+                    loadPosts(); // Try to refresh anyway
+                }
+            });
+        }
+
+        // Student: Submit assignment
+        window.showAssignmentSubmit = function (assignmentID) {
+            document.getElementById('assignmentSubmitSection').style.display = '';
+            const assignmentSubmitForm = document.getElementById('assignmentSubmitForm');
+            const assignmentSubmitMsg = document.getElementById('assignmentSubmitMsg');
+            assignmentSubmitForm.onsubmit = async function (e) {
+                e.preventDefault();
+                const formData = new FormData(assignmentSubmitForm);
+                formData.append('assignmentID', assignmentID);
+                assignmentSubmitMsg.textContent = '';
+                // Debug: log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log('FormData:', key, value);
+                }
+                try {
+                    const res = await fetch('/api/assignment/submit', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('learnify_token')}`
+                        }
+                    });
+                    // Debug: log backend response
+                    const data = await res.json();
+                    console.log('Backend response:', data);
+                    if (data.success) {
+                        assignmentSubmitMsg.textContent = "Assignment submitted successfully!";
+                        assignmentSubmitForm.reset();
+                        setTimeout(() => {
+                            document.getElementById('assignmentSubmitSection').style.display = 'none';
+                            assignmentSubmitMsg.textContent = '';
+                        }, 3000);
+                        fetchStudentSubmissions();
+                    } else {
+                        assignmentSubmitMsg.textContent = data.message || 'Failed to submit assignment.';
+                        assignmentSubmitMsg.style.color = 'red';
+                    }
+                } catch (err) {
+                    console.error('Error submitting assignment:', err);
+                    assignmentSubmitMsg.textContent = 'Error submitting assignment. Please try again.';
+                    assignmentSubmitMsg.style.color = 'red';
+                }
+            };
+        };
+
+        // Add this function after showAssignmentSubmit
+        window.unsubmitAssignment = function (submissionId, assignmentId) {
+            if (confirm('Are you sure you want to unsubmit your assignment?')) {
+                fetch(`/api/assignment/submission/${submissionId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            fetchStudentSubmissions();
+                        } else {
+                            alert('Failed to unsubmit: ' + (data.message || 'Unknown error.'));
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error unsubmitting assignment. Please try again.');
+                    });
+            }
+        };
+
+        // Teacher: View submissions
+        window.viewSubmissions = function (assignmentID, assignmentTitle) {
+            document.getElementById('modalTitle').textContent = `Submissions for: ${assignmentTitle}`;
+            document.getElementById('submissionsModal').style.display = 'block';
+
+            fetch(`/api/assignment/submissions?assignmentID=${assignmentID}`, {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(submissions => {
+                    const submissionsList = document.getElementById('submissionsList');
+                    if (!submissions) {
+                        submissionsList.innerHTML = '<div class="no-submissions">Error loading submissions.</div>';
+                        return;
+                    }
+                    if (Array.isArray(submissions)) {
+                        if (submissions.length === 0) {
+                            submissionsList.innerHTML = '<div class="no-submissions">No submissions yet.</div>';
+                        } else {
+                            submissionsList.innerHTML = '';
+                            submissions.forEach(submission => {
+                                const student = submission.studentID;
+                                const submissionTime = new Date(submission.submittedAt).toLocaleString();
+                                const submissionItem = document.createElement('div');
+                                submissionItem.className = 'submission-item';
+                                submissionItem.innerHTML = `
+                                    <div class="student-info-section">
+                                        <div class="student-info-item">
+                                            <span class="student-info-label" style="color: #222; font-weight: bold;">Student Name:</span>
+                                            <span class="student-info-value" style="color: #1976d2; font-weight: bold;">${student.fullName || student.name || student.username || 'Unknown'}</span>
+                                        </div>
+                                        <div class="student-info-item">
+                                            <span class="student-info-label">Seat No:</span>
+                                            <span class="student-info-value">${student.seatNumber || 'Not assigned'}</span>
+                                        </div>
+                                        <div class="student-info-item">
+                                            <span class="student-info-label">Submitted:</span>
+                                            <span class="student-info-value">${submissionTime}</span>
+                                        </div>
+                                    </div>
+                                    <div class="submission-actions">
+                                        <a href="/uploads/${submission.file}" target="_blank" class="btn btn-primary">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                        <a href="#" onclick="previewFile('/uploads/${submission.file}', '${submission.file}')" class="btn btn-primary" style="margin-left: 10px;">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </a>
+                                </div>
+                            `;
+                                submissionsList.appendChild(submissionItem);
+                            });
+                        }
+                    } else if (submissions.success === false) {
+                        submissionsList.innerHTML = `<div class="no-submissions">${submissions.message || 'Error loading submissions.'}</div>`;
+                    } else {
+                        submissionsList.innerHTML = '<div class="no-submissions">Error loading submissions.</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading submissions:', err);
+                    document.getElementById('submissionsList').innerHTML = '<div class="no-submissions">Error loading submissions.</div>';
+                });
+        };
+
+        // Close modal
+        window.closeSubmissionsModal = function () {
+            document.getElementById('submissionsModal').style.display = 'none';
+        };
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('submissionsModal');
+            const filePreviewModal = document.getElementById('filePreviewModal');
+            const editPostModal = document.getElementById('editPostModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+            if (event.target === filePreviewModal) {
+                closeFilePreview();
+            }
+            if (event.target === editPostModal) {
+                closeEditPostModal();
+            }
+        };
+
+        // File Preview Functions
+        window.previewFile = function (fileUrl, fileName) {
+            const modal = document.getElementById('filePreviewModal');
+            const title = document.getElementById('filePreviewTitle');
+            const body = document.getElementById('filePreviewBody');
+
+            // Show modal with loading state
+            modal.style.display = 'block';
+            title.textContent = `Preview: ${fileName}`;
+            body.innerHTML = `
+                <div class="file-preview-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>Loading preview...</p>
+                </div>
+            `;
+
+            // Get file extension
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+
+            // Handle different file types
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
+                // Image files
+                body.innerHTML = `
+                    <img src="${fileUrl}" alt="${fileName}" class="file-preview-image" onload="this.style.display='block'" onerror="showUnsupportedFile()">
+                    <div class="file-preview-actions">
+                        <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
+                            <i class="fas fa-external-link-alt"></i> Open in New Tab
+                        </a>
+                        <a href="${fileUrl}" download class="file-preview-btn file-preview-btn-secondary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                `;
+            } else if (fileExtension === 'pdf') {
+                // PDF files
+                body.innerHTML = `
+                    <iframe src="${fileUrl}" class="file-preview-pdf"></iframe>
+                    <div class="file-preview-actions">
+                        <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
+                            <i class="fas fa-external-link-alt"></i> Open in New Tab
+                        </a>
+                        <a href="${fileUrl}" download class="file-preview-btn file-preview-btn-secondary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                `;
+            } else if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'csv'].includes(fileExtension)) {
+                // Text files
+                fetch(fileUrl)
+                    .then(response => response.text())
+                    .then(text => {
+                        body.innerHTML = `
+                            <div class="file-preview-text">${text}</div>
+                            <div class="file-preview-actions">
+                                <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
+                                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                                </a>
+                                <a href="${fileUrl}" download class="file-preview-btn file-preview-btn-secondary">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        `;
+                    })
+                    .catch(error => {
+                        showUnsupportedFile(fileUrl);
+                    });
+            } else {
+                // Unsupported file types
+                showUnsupportedFile(fileUrl);
+            }
+        };
+
+        function showUnsupportedFile(fileUrl) {
+            const body = document.getElementById('filePreviewBody');
+            body.innerHTML = `
+                <div class="file-preview-unsupported">
+                    <i class="fas fa-file-alt"></i>
+                    <p>Unsupported file type: ${fileUrl.split('.').pop().toUpperCase()}</p>
+                </div>
+                    <div class="file-preview-actions">
+                        <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
+                            <i class="fas fa-external-link-alt"></i> Open in New Tab
+                        </a>
+                        <a href="${fileUrl}" download class="file-preview-btn file-preview-btn-secondary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                </div>
+            `;
+        }
+
+        // Edit Post Functions
+        window.showEditPost = function (postId) {
+            const editPostModal = document.getElementById('editPostModal');
+            const editPostForm = document.getElementById('editPostForm');
+            const editPostIdInput = document.getElementById('editPostId');
+            const editPostTypeSelect = document.getElementById('editPostType');
+            const editPostContentTextarea = document.getElementById('editPostContent');
+            const editPostDueDateInput = document.getElementById('editPostDueDate');
+            const editPostFileInput = document.getElementById('editPostFile');
+            const editPostCurrentFileDiv = document.getElementById('editPostCurrentFile');
+            // Add total marks field for edit modal if not present
+            let editPostTotalMarksInput = document.getElementById('editPostTotalMarks');
+            let editPostTotalMarksSection = document.getElementById('editPostTotalMarksSection');
+            if (!editPostTotalMarksSection) {
+                editPostTotalMarksSection = document.createElement('div');
+                editPostTotalMarksSection.id = 'editPostTotalMarksSection';
+                editPostTotalMarksSection.style.marginBottom = '1rem';
+                editPostTotalMarksSection.innerHTML = `
+                    <label for="editPostTotalMarks">Total Marks (for assignments):</label>
+                    <input type="number" name="totalMarks" id="editPostTotalMarks" min="1" step="1" style="padding: 0.7rem; border-radius: 6px; border: 1px solid #e0e0e0;" autocomplete="off">
+                    <div id="editTotalMarksFeedback" class="marks-feedback"></div>
+                `;
+                editPostForm.insertBefore(editPostTotalMarksSection, editPostForm.querySelector('button[type="submit"]'));
+            }
+            editPostTotalMarksInput = document.getElementById('editPostTotalMarks');
+            const editTotalMarksFeedback = document.getElementById('editTotalMarksFeedback');
+            // Hide by default
+            editPostTotalMarksSection.style.display = 'none';
+            // Add due date section reference
+            const editPostDueDateSection = editPostDueDateInput.parentElement;
+            // Add type change event for edit modal
+            editPostTypeSelect.addEventListener('change', function () {
+                updateAssignmentFields(this.value, editPostDueDateSection, editPostTotalMarksSection, editPostTotalMarksInput);
+            });
+            // Fetch post data to populate the form
+            fetch(`/api/post/single/${postId}`, {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(post => {
+                    if (!post) {
+                        alert('Post not found.');
+                        return;
+                    }
+                    editPostIdInput.value = post._id;
+                    editPostTypeSelect.value = post.type;
+                    editPostContentTextarea.value = post.content;
+                    editPostDueDateInput.value = post.dueDate ? new Date(post.dueDate).toISOString().slice(0, 16) : '';
+                    if (post.type === 'assignment') {
+                        editPostTotalMarksSection.style.display = 'block';
+                        editPostTotalMarksInput.required = true;
+                        editPostTotalMarksInput.value = post.totalMarks || '';
+                        editPostDueDateSection.style.display = 'block';
+                    } else {
+                        editPostTotalMarksSection.style.display = 'none';
+                        editPostTotalMarksInput.required = false;
+                        editPostTotalMarksInput.value = '';
+                        editPostDueDateSection.style.display = 'none';
+                        editPostDueDateInput.value = '';
+                    }
+                    if (post.file) {
+                        const fileLink = document.createElement('a');
+                        fileLink.href = `/uploads/${post.file}`;
+                        fileLink.target = '_blank';
+                        fileLink.textContent = `Current File: ${post.file}`;
+                        editPostCurrentFileDiv.innerHTML = '';
+                        editPostCurrentFileDiv.appendChild(fileLink);
+                    } else {
+                        editPostCurrentFileDiv.innerHTML = '';
+                    }
+                    editPostModal.style.display = 'block';
+                })
+                .catch(err => {
+                    console.error('Error fetching post for editing:', err);
+                    alert('Error loading post for editing. Please try again.');
+                });
+            // Validate total marks on submit
+            editPostForm.onsubmit = async function (e) {
+                if (editPostTypeSelect.value === 'assignment') {
+                    const value = Number(editPostTotalMarksInput.value);
+                    editTotalMarksFeedback.textContent = '';
+                    editTotalMarksFeedback.className = 'marks-feedback';
+                    editPostTotalMarksInput.setCustomValidity('');
+                    if (!value) {
+                        editTotalMarksFeedback.textContent = 'Please enter a valid number';
+                        editTotalMarksFeedback.classList.add('error');
+                        editPostTotalMarksInput.setCustomValidity('Please enter a valid number');
+                        e.preventDefault();
+                        return false;
+                    }
+                    if (value <= 0) {
+                        editTotalMarksFeedback.textContent = 'Total marks must be greater than 0';
+                        editTotalMarksFeedback.classList.add('error');
+                        editPostTotalMarksInput.setCustomValidity('Total marks must be greater than 0');
+                        e.preventDefault();
+                        return false;
+                    }
+                    if (!Number.isInteger(value)) {
+                        editTotalMarksFeedback.textContent = 'Total marks must be a whole number';
+                        editTotalMarksFeedback.classList.add('error');
+                        editPostTotalMarksInput.setCustomValidity('Total marks must be a whole number');
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                // Continue with async submit
+                e.preventDefault();
+                const formData = new FormData(editPostForm);
+                // Do NOT append postId to formData; use it in the URL
+                try {
+                    const res = await fetch(`/api/post/${postId}`, {
+                        method: 'PUT',
+                        body: formData,
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('learnify_token')}`
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('Post updated successfully!');
+                        closeEditPostModal();
+                        loadPosts();
+                    } else {
+                        alert(data.message || 'Failed to update post.');
+                    }
+                } catch (err) {
+                    console.error('Error updating post:', err);
+                    alert('Error updating post. Please try again.');
+                }
+            };
+        };
+
+        // Close Edit Post Modal
+        window.closeEditPostModal = function () {
+            document.getElementById('editPostModal').style.display = 'none';
+        };
+
+        // Add this function to close the file preview modal
+        window.closeFilePreview = function () {
+            const modal = document.getElementById('filePreviewModal');
+            if (modal) modal.style.display = 'none';
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Join Class - Learnify</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body style="background: #e3f0fc;">
+    <div style="padding: 2rem 0 0 2rem;">
+        <button id="backToDashboardBtn"
+            style="background: #1565c0; color: #fff; border: none; border-radius: 24px; padding: 0.6rem 1.5rem; font-size: 1.05rem; font-weight: 600; box-shadow: 0 2px 8px #0001; cursor: pointer; transition: background 0.2s;">
+            ← Dashboard
+        </button>
+    </div>
+    <div class="centered">
+        <form class="login-form" id="joinClassForm">
+            <h2>Join a Class</h2>
+            <input type="text" name="classCode" placeholder="Class Code" required autocomplete="off">
+            <button type="submit">Join</button>
+            <div id="join-class-error" class="error-message"></div>
+        </form>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // Check authentication on page load
+        if (!localStorage.getItem('learnify_token')) {
+            window.location.href = '/index.html';
+        }
+        // Back button logic
+        fetch('/api/auth/me', { headers: getAuthHeaders() })
+            .then(res => res.json())
+            .then(user => {
+                const btn = document.getElementById('backToDashboardBtn');
+                btn.onclick = function (e) {
+                    e.preventDefault();
+                    if (user && user.role === 'teacher') {
+                        window.location.href = 'dashboard-teacher.html';
+                    } else {
+                        window.location.href = 'dashboard-student.html';
+                    }
+                };
+            });
+        const form = document.getElementById('joinClassForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const classCode = formData.get('classCode');
+            const res = await fetch('/api/classroom/join', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ classCode })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = 'dashboard-student.html';
+            } else {
+                document.getElementById('join-class-error').textContent = data.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

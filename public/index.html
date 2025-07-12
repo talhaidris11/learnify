@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Learnify</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="learnify-logo">
+                <!-- University/hat logo SVG (example, replace with your actual SVG if different) -->
+                <svg width="100" height="100" viewBox="0 0 64 64" fill="none">
+                    <ellipse cx="32" cy="52" rx="20" ry="8" fill="#fff" opacity="0.10" />
+                    <path d="M32 12L56 24L32 36L8 24L32 12Z" fill="#fff" stroke="#26d0ce" stroke-width="2" />
+                    <rect x="26" y="36" width="12" height="12" rx="2" fill="#26d0ce" />
+                    <rect x="30" y="40" width="4" height="8" rx="1" fill="#fff" />
+                </svg>
+            </div>
+            <div class="splash-title" id="splash-title">Welcome to Learnify</div>
+        </div>
+    </div>
+    <div class="centered" id="main-content">
+        <!-- Learnify Title/Header -->
+        <div class="login-header">
+            Learnify
+        </div>
+        <h1 id="learnify-title"></h1>
+        <form class="login-form" id="loginForm">
+            <input type="text" name="username" placeholder="Username" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+            <div id="login-error"></div>
+            <p>New here? <a href="register.html">Register now</a></p>
+        </form>
+    </div>
+</body>
+
+</html>

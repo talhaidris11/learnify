@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Learnify Teacher Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo" style="display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-graduation-cap"
+                        style="font-size: 2rem; color: #1976d2; animation: logoPopIn 1s;"></i>
+                </span>
+                <span class="sidebar-title" style="color: #1976d2; font-weight: 700; font-size: 1.3rem;">Learnify</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active" id="nav-home"><i class="fa fa-home"></i> Home</a>
+                <div class="sidebar-group">
+                    <a href="#" class="sidebar-group-toggle" id="created-toggle">
+                        <i class="fa fa-chalkboard"></i> Created
+                        <span class="sidebar-arrow" id="created-arrow">&#9662;</span>
+                    </a>
+                    <div class="sidebar-submenu" id="created-submenu">
+                        <a href="#" id="to-review-link"><i class="fa fa-tasks"></i> To Review</a>
+                    </div>
+                </div>
+                <a href="#" id="settings-link"><i class="fa fa-cog"></i> Settings</a>
+                <a href="#" id="logout-link"><i class="fa fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </aside>
+        <main class="dashboard-main">
+            <!-- Content will be injected by JS -->
+        </main>
+    </div>
+    <!-- Edit Class Modal (always present in DOM) -->
+    <div id="editClassModal" class="modal"
+        style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.25);">
+        <div class="modal-content"
+            style="background:#fff; margin:6% auto; padding:2.5rem 2rem 2rem 2rem; border-radius:18px; width:95%; max-width:420px; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
+            <button class="close" onclick="closeEditClassModal()"
+                style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.7rem; color:#1976d2; font-weight:bold; cursor:pointer; transition:color 0.2s;">&times;</button>
+            <h3 style="margin-bottom:1.5rem; text-align:center; color:#1976d2; font-size:1.3rem; font-weight:700;">Edit
+                Class Info</h3>
+            <form id="editClassForm">
+                <input type="hidden" name="classId" id="editClassId">
+                <div style="margin-bottom: 1.2rem;">
+                    <label style="font-weight:500;">Class Name:</label>
+                    <input type="text" name="className" id="editClassName" required
+                        style="width:100%;padding:0.7rem; border-radius:7px; border:1px solid #e0e0e0; margin-top:0.3rem;">
+                </div>
+                <div style="margin-bottom: 1.2rem;">
+                    <label style="font-weight:500;">Section:</label>
+                    <input type="text" name="section" id="editClassSection"
+                        style="width:100%;padding:0.7rem; border-radius:7px; border:1px solid #e0e0e0; margin-top:0.3rem;">
+                </div>
+                <div style="margin-bottom: 1.2rem;">
+                    <label style="font-weight:500;">Subject:</label>
+                    <input type="text" name="subject" id="editClassSubject"
+                        style="width:100%;padding:0.7rem; border-radius:7px; border:1px solid #e0e0e0; margin-top:0.3rem;">
+                </div>
+                <button type="submit" class="btn btn-success"
+                    style="width:100%; padding:0.8rem; border-radius:8px; font-size:1.08rem; font-weight:600; background:#43a047; color:#fff; border:none; transition:background 0.2s;">Update
+                    Class</button>
+            </form>
+            <div id="editClassMsg" style="margin-top:1.2rem; text-align:center; font-weight:500;"></div>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div id="filePreviewModal" class="file-preview-modal"
+        style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8);">
+        <div class="file-preview-content"
+            style="background-color: #fff; margin: 2% auto; padding: 20px; border-radius: 10px; width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative;">
+            <div class="file-preview-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                <div class="file-preview-title" id="filePreviewTitle"
+                    style="font-size: 1.2rem; font-weight: bold; color: #333;">File Preview</div>
+                <button class="file-preview-close" onclick="closeFilePreview()"
+                    style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; background: none; border: none;">&times;</button>
+            </div>
+            <div class="file-preview-body" id="filePreviewBody">
+                <div class="file-preview-loading" style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-spinner"
+                        style="font-size: 2rem; color: #1976d2; animation: spin 1s linear infinite;"></i>
+                    <p>Loading preview...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication and role on page load
+        if (!localStorage.getItem('learnify_token')) {
+            window.location.href = '/index.html';
+        }
+        // Role check: if student, redirect to student dashboard
+        fetch('/api/auth/me', { headers: getAuthHeaders() })
+            .then(res => res.json())
+            .then(user => {
+                if (user && user.role === 'student') {
+                    window.location.href = 'dashboard-student.html';
+                }
+            });
+
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('learnify_token');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Sidebar collapsible
+        document.addEventListener('DOMContentLoaded', function () {
+            const createdToggle = document.getElementById('created-toggle');
+            const createdGroup = createdToggle.parentElement;
+            createdToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                createdGroup.classList.toggle('open');
+            });
+
+            // Navigation switching
+            document.getElementById('nav-home').addEventListener('click', function (e) {
+                e.preventDefault();
+                setActiveNav(this);
+                showHome();
+                setPageHeader('Home');
+            });
+            document.getElementById('to-review-link').addEventListener('click', function (e) {
+                e.preventDefault();
+                setActiveNav(this);
+                showToReview();
+                setPageHeader('To Review');
+            });
+            document.getElementById('settings-link').addEventListener('click', function (e) {
+                e.preventDefault();
+                setActiveNav(this);
+                showSettings();
+                setPageHeader('Settings');
+            });
+            document.getElementById('logout-link').addEventListener('click', function (e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem('learnify_token');
+                    window.location.href = '/index.html';
+                }
+            });
+
+            // Initial load
+            showHome();
+        });
+
+        // Sidebar nav active state fix
+        function setActiveNav(element) {
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            if (element) element.classList.add('active');
+        }
+
+        function showHome() {
+            document.querySelector('.dashboard-main').innerHTML = `
+                <div class="dashboard-header">
+                    <span style="font-size: 2rem; font-weight: 700; letter-spacing: 1px;">Home</span>
+                    <a href="create-class.html" class="join-class-btn"> <i class="fas fa-plus"></i> Create Class</a>
+                </div>
+                <div class="class-list" id="class-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;">
+                    <div class="loading">Loading classes...</div>
+                </div>
+            `;
+            loadTeacherClasses();
+        }
+
+        function loadTeacherClasses() {
+            fetch('/api/classroom/my', {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(classes => {
+                    if (!classes) return;
+
+                    const classList = document.getElementById('class-list');
+                    if (classes.length === 0) {
+                        classList.innerHTML = '<div class="no-classes">No classes created yet. Create your first class!</div>';
+                    } else {
+                        classList.innerHTML = '';
+                        classes.forEach(cls => {
+                            classList.innerHTML += `
+                                <div class="class-card">
+                                    <div class="class-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <h4 class="class-title" style="margin: 0 0 0.5rem 0; color: #1976d2;">${cls.className}</h4>
+                                        <button class="class-remove-btn" onclick="deleteClass('${cls._id}')" title="Remove Class"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="class-meta" style="color: #555; font-size: 1.02em;">
+                                        Subject: <b>${cls.subject || 'Not specified'}</b><br>
+                                        Section: <b>${cls.section || 'Not specified'}</b><br>
+                                        Class Code: <b>${cls.classCode}</b>
+                                    </div>
+                                    <a href="class.html?id=${cls._id}" class="view-class-link" style="color: #43a047; text-decoration: none; font-weight: 500; margin-top: 0.5rem;">&rarr; View Class</a>
+                                </div>
+                            `;
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading classes:', err);
+                    document.getElementById('class-list').innerHTML = '<div class="error">Error loading classes. Please try again.</div>';
+                });
+        }
+
+        function deleteClass(classId) {
+            if (confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
+                fetch(`/api/classroom/${classId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload whichever section is currently shown
+                            if (document.getElementById('class-list')) loadTeacherClasses();
+                            if (document.getElementById('settings-class-list')) loadSettingsClasses();
+                            // Also reload home if we're on the home page
+                            if (document.querySelector('.dashboard-main').innerHTML.includes('My Classes')) {
+                                showHome();
+                            }
+                        } else {
+                            alert('Failed to delete class: ' + data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error deleting class:', err);
+                        alert('Error deleting class. Please try again.');
+                    });
+            }
+        }
+
+        function showToReview() {
+            document.querySelector('.dashboard-main').innerHTML = `
+                <div class="dashboard-header">
+                    <span style="font-size: 2rem; font-weight: 700; letter-spacing: 1px;">To Review</span>
+                </div>
+                <div class="to-review-section" id="to-review-section">
+                    <div class="loading">Loading submissions to review...</div>
+                </div>
+            `;
+            loadSubmissionsToReview();
+        }
+
+        function loadSubmissionsToReview() {
+            fetch('/api/assignment/submissions-to-review', {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+
+                    // Group assignments by class
+                    const classMap = {};
+                    data.forEach(item => {
+                        if (!classMap[item.className]) classMap[item.className] = [];
+                        classMap[item.className].push(item);
+                    });
+
+                    const reviewSection = document.getElementById('to-review-section');
+                    if (data.length === 0) {
+                        reviewSection.innerHTML = '<div class="no-submissions">No assignments to review.</div>';
+                    } else {
+                        reviewSection.innerHTML = '';
+                        Object.keys(classMap).forEach(className => {
+                            const assignments = classMap[className];
+                            reviewSection.innerHTML += `
+                                <div class="review-class">
+                                    <div class="review-class-header">
+                                        <h3>${className}</h3>
+                                    </div>
+                                    <div class="assignments-in-class">
+                                        <table class="result-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Assignment</th>
+                                                    <th>Student</th>
+                                                    <th>Seat No</th>
+                                                    <th>Preview</th>
+                                                    <th>Download</th>
+                                                    <th>Marks</th>
+                                                    <th>Submit</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${assignments.map(item => {
+                                return item.submissions.map(sub => `
+                                                        <tr>
+                                                            <td>${item.assignmentTitle}</td>
+                                                            <td>${sub.studentID.fullName}</td>
+                                                            <td>${sub.studentID.seatNumber || 'Not assigned'}</td>
+                                                            <td><button onclick="previewFile('/uploads/${sub.file}', '${sub.file}')" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button></td>
+                                                            <td><a href="/uploads/${sub.file}" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a></td>
+                                                            <td><div class="marks-input-group">
+                                                                <input type="number" 
+                                                                    class="marks-input" 
+                                                                    placeholder="Enter marks" 
+                                                                    min="0" 
+                                                                    max="${item.totalMarks}"
+                                                                    value="${sub.marks !== undefined ? sub.marks : ''}"
+                                                                    id="marks-${sub._id}"
+                                                                >
+                                                                <span class="marks-total">/ ${item.totalMarks ?? 'N/A'}</span>
+                                                            </div>
+                                                            <div class="marks-feedback" id="marks-feedback-${sub._id}"></div></td>
+                                                            <td><button onclick="submitMarks('${sub._id}', ${item.totalMarks}, '${className}', '${item.assignmentTitle}')" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Submit</button></td>
+                                                        </tr>
+                                                    `).join('');
+                            }).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading submissions:', err);
+                    document.getElementById('to-review-section').innerHTML = '<div class="error">Error loading submissions. Please try again.</div>';
+                });
+        }
+
+        // Update marks submission function to refresh the result section
+        window.submitMarks = function (submissionId, totalMarks, className, assignmentTitle) {
+            const marksInput = document.getElementById(`marks-${submissionId}`);
+            const feedbackDiv = document.getElementById(`marks-feedback-${submissionId}`);
+            const marks = Number(marksInput.value);
+
+            // Clear previous feedback
+            feedbackDiv.textContent = '';
+            feedbackDiv.className = 'marks-feedback';
+
+            // Validate marks
+            if (!marks && marks !== 0) {
+                feedbackDiv.textContent = 'Please enter a valid number';
+                feedbackDiv.classList.add('error');
+                return;
+            }
+
+            if (marks < 0) {
+                feedbackDiv.textContent = 'Marks cannot be negative';
+                feedbackDiv.classList.add('error');
+                return;
+            }
+
+            if (marks > totalMarks) {
+                feedbackDiv.textContent = `Marks cannot exceed ${totalMarks}`;
+                feedbackDiv.classList.add('error');
+                return;
+            }
+
+            // Submit marks
+            fetch(`/api/assignment/submission/${submissionId}/marks`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    marks,
+                    className,
+                    assignmentTitle
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        feedbackDiv.textContent = 'Marks updated successfully';
+                        feedbackDiv.classList.add('success');
+
+                        // Update the marks display
+                        marksInput.value = marks;
+
+                        setTimeout(() => {
+                            feedbackDiv.textContent = '';
+                            feedbackDiv.className = 'marks-feedback';
+                        }, 3000);
+                    } else {
+                        feedbackDiv.textContent = data.message || 'Failed to update marks';
+                        feedbackDiv.classList.add('error');
+                    }
+                })
+                .catch(err => {
+                    feedbackDiv.textContent = 'Error updating marks';
+                    feedbackDiv.classList.add('error');
+                });
+        };
+        function setPageHeader(name) {
+            document.querySelector('.dashboard-header span').textContent = name;
+        }
+
+        // Fix showEditClassModal to always open modal and submit form
+        window.showEditClassModal = function (id, name, section, subject) {
+            document.getElementById('editClassId').value = id;
+            document.getElementById('editClassName').value = name;
+            document.getElementById('editClassSection').value = section;
+            document.getElementById('editClassSubject').value = subject;
+            document.getElementById('editClassMsg').textContent = '';
+            document.getElementById('editClassModal').style.display = 'block';
+        };
+        window.closeEditClassModal = function () {
+            document.getElementById('editClassModal').style.display = 'none';
+        };
+        document.getElementById('editClassForm').onsubmit = async function (e) {
+            e.preventDefault();
+            const classId = document.getElementById('editClassId').value;
+            const className = document.getElementById('editClassName').value;
+            const section = document.getElementById('editClassSection').value;
+            const subject = document.getElementById('editClassSubject').value;
+            try {
+                const res = await fetch(`/api/classroom/${classId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('learnify_token')}` },
+                    body: JSON.stringify({ className, section, subject })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('editClassMsg').textContent = 'Class updated!';
+                    setTimeout(() => {
+                        closeEditClassModal();
+                        location.reload(); // Reload to see changes
+                    }, 1200);
+                } else {
+                    document.getElementById('editClassMsg').textContent = data.message || 'Failed to update class.';
+                }
+            } catch (err) {
+                document.getElementById('editClassMsg').textContent = 'Error updating class.';
+            }
+        };
+
+        function showSettings() {
+            document.querySelector('.dashboard-main').innerHTML = `
+                <div class="dashboard-header">
+                    <span style="font-size: 2rem; font-weight: 700; letter-spacing: 1px;">Settings</span>
+                </div>
+                <div class="class-list" id="settings-class-list">
+                    <div class="loading">Loading classes...</div>
+                </div>
+            `;
+            loadSettingsClasses();
+        }
+        function loadSettingsClasses() {
+            fetch('/api/classroom/my', {
+                headers: getAuthHeaders()
+            })
+                .then(res => res.json())
+                .then(classes => {
+                    const classList = document.getElementById('settings-class-list');
+                    if (!classes || classes.length === 0) {
+                        classList.innerHTML = '<div class="no-classes">No classes found.</div>';
+                    } else {
+                        classList.innerHTML = '';
+                        classes.forEach(cls => {
+                            classList.innerHTML += `
+                                <div class="class-card">
+                                    <div class="class-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <h4 class="class-title" style="margin: 0 0 0.5rem 0; color: #1976d2;">${cls.className}</h4>
+                                        <div class="class-actions" style="display: flex; gap: 0.5rem;">
+                                            <button class="edit-class-btn" title="Edit Class" onclick="showEditClassModal('${cls._id}', '${cls.className.replace(/'/g, "&#39;")}', '${cls.section ? cls.section.replace(/'/g, "&#39;") : ''}', '${cls.subject ? cls.subject.replace(/'/g, "&#39;") : ''}')" style="background: #1976d2; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer;"><i class="fas fa-pen"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="class-meta" style="color: #555; font-size: 1.02em;">
+                                        Subject: <b>${cls.subject || 'Not specified'}</b><br>
+                                        Section: <b>${cls.section || 'Not specified'}</b><br>
+                                        Class Code: <b>${cls.classCode}</b>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('settings-class-list').innerHTML = '<div class="error">Error loading classes. Please try again.</div>';
+                });
+        }
+        window.showInlineEditClassForm = function (id, name, section, subject) {
+            // Remove any other open edit forms
+            document.querySelectorAll('.inline-edit-form-container').forEach(el => el.innerHTML = '');
+            const container = document.querySelector(`#settings-class-card-${id} .inline-edit-form-container`);
+            container.innerHTML = `
+                <form id="editClassForm-${id}" style="margin-top:1rem;background:#f5f7fa;padding:1rem;border-radius:8px;">
+                    <input type="hidden" name="classId" value="${id}">
+                    <div style="margin-bottom: 1rem;">
+                        <label>Class Name:</label>
+                        <input type="text" name="className" value="${name}" required style="width:100%;padding:0.5rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Section:</label>
+                        <input type="text" name="section" value="${section}" style="width:100%;padding:0.5rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Subject:</label>
+                        <input type="text" name="subject" value="${subject}" style="width:100%;padding:0.5rem;">
+                    </div>
+                    <button type="submit" class="btn btn-success">Update Class</button>
+                    <button type="button" class="btn" style="margin-left:1rem;" onclick="cancelInlineEditClassForm('${id}')">Cancel</button>
+                    <div id="editClassMsg-${id}" style="margin-top:1rem;"></div>
+                </form>
+            `;
+            document.getElementById(`editClassForm-${id}`).onsubmit = async function (e) {
+                e.preventDefault();
+                const form = e.target;
+                const className = form.className.value;
+                const section = form.section.value;
+                const subject = form.subject.value;
+                try {
+                    const res = await fetch(`/api/classroom/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ className, section, subject })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        document.getElementById(`editClassMsg-${id}`).textContent = 'Class updated!';
+                        setTimeout(() => {
+                            loadSettingsClasses();
+                        }, 1200);
+                    } else {
+                        document.getElementById(`editClassMsg-${id}`).textContent = data.message || 'Failed to update class.';
+                    }
+                } catch (err) {
+                    document.getElementById(`editClassMsg-${id}`).textContent = 'Error updating class.';
+                }
+            };
+        };
+        window.cancelInlineEditClassForm = function (id) {
+            const container = document.querySelector(`#settings-class-card-${id} .inline-edit-form-container`);
+            if (container) container.innerHTML = '';
+        };
+
+        // Add file preview function
+        window.previewFile = function (fileUrl, fileName) {
+            const modal = document.getElementById('filePreviewModal');
+            const title = document.getElementById('filePreviewTitle');
+            const body = document.getElementById('filePreviewBody');
+
+            title.textContent = `Preview: ${fileName}`;
+            modal.style.display = 'block';
+
+            // Clear previous content
+            body.innerHTML = '<div class="file-preview-loading"><i class="fas fa-spinner"></i><p>Loading preview...</p></div>';
+
+            // Check file type
+            const fileType = fileName.split('.').pop().toLowerCase();
+
+            if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
+                // Image preview
+                const img = new Image();
+                img.onload = function () {
+                    body.innerHTML = `<img src="${fileUrl}" alt="${fileName}" style="max-width: 100%; height: auto;">`;
+                };
+                img.onerror = function () {
+                    body.innerHTML = '<div class="file-preview-error">Failed to load image</div>';
+                };
+                img.src = fileUrl;
+            } else if (['pdf'].includes(fileType)) {
+                // PDF preview
+                body.innerHTML = `
+                    <iframe src="${fileUrl}" style="width: 100%; height: 80vh; border: none;"></iframe>
+                `;
+            } else {
+                // Unsupported file type
+                body.innerHTML = `
+                    <div class="file-preview-unsupported">
+                        <i class="fas fa-file"></i>
+                        <p>Preview not available for ${fileType.toUpperCase()} files</p>
+                        <div class="file-preview-actions">
+                            <a href="${fileUrl}" target="_blank" class="btn btn-primary">Open in New Tab</a>
+                            <a href="${fileUrl}" download class="btn btn-secondary">Download</a>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        window.closeFilePreview = function () {
+            document.getElementById('filePreviewModal').style.display = 'none';
+        };
+
+        // Add CSS animation for spinner
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+    <style>
+        .class-remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 50%;
+            opacity: 0.6;
+            transition: color 0.18s, background 0.18s, opacity 0.18s;
+            z-index: 2;
+        }
+
+        .class-card {
+            position: relative;
+        }
+
+        .class-card:hover .class-remove-btn {
+            opacity: 1;
+            color: #d32f2f;
+            background: #f5f5f5;
+        }
+
+        .class-remove-btn:hover {
+            color: #b71c1c;
+            background: #eee;
+            opacity: 1;
+        }
+    </style>
+</body>
+
+</html>

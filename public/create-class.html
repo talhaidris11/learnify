@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Class - Learnify</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="centered">
+        <form class="login-form" id="createClassForm">
+            <h2>Create a Class</h2>
+            <input type="text" name="className" placeholder="Class Name" required autocomplete="off">
+            <input type="text" name="section" placeholder="Section (optional)" autocomplete="off">
+            <input type="text" name="subject" placeholder="Subject (optional)" autocomplete="off">
+            <button type="submit">Create</button>
+            <div id="create-class-error" class="error-message"></div>
+        </form>
+        <a href="dashboard-teacher.html" class="back-link">← Back to Dashboard</a>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // Check authentication on page load
+        if (!localStorage.getItem('learnify_token')) {
+            window.location.href = '/index.html';
+        }
+        const form = document.getElementById('createClassForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const className = formData.get('className');
+            const section = formData.get('section');
+            const subject = formData.get('subject');
+            const payload = { className, section, subject };
+            const res = await fetch('/api/classroom/create', {
+                method: 'POST',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = 'dashboard-teacher.html';
+            } else {
+                document.getElementById('create-class-error').textContent = data.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard - Learnify</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo"><i class="fas fa-graduation-cap"></i></span>
+                <span class="sidebar-title">Learnify</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active" id="nav-home"><i class="fas fa-home"></i> Home</a>
+                <a href="#" id="nav-enrolled"><i class="fas fa-book"></i> Enrolled</a>
+                <a href="#" id="nav-todo"><i class="fas fa-tasks"></i> To do</a>
+                <a href="#" id="nav-result"><i class="fas fa-chart-bar"></i> Result</a>
+                <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </aside>
+        <main class="dashboard-main" id="dashboard-main">
+            <div class="dashboard-header">
+                <h2>My Classes</h2>
+                <a href="join-class.html" class="join-class-btn"><i class="fas fa-plus"></i> Join Class</a>
+            </div>
+            <div class="class-list" id="classList">
+                <div class="loading">Loading classes...</div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // Check authentication and role on page load
+        if (!localStorage.getItem('learnify_token')) {
+            window.location.href = '/index.html';
+        }
+        // Role check: if teacher, redirect to teacher dashboard
+        fetch('/api/auth/me', { headers: getAuthHeaders() })
+            .then(res => res.json())
+            .then(user => {
+                if (user && user.role === 'teacher') {
+                    window.location.href = 'dashboard-teacher.html';
+                }
+            });
+
+        // Sidebar navigation logic
+        document.getElementById('nav-home').addEventListener('click', function (e) {
+            e.preventDefault();
+            setActiveNav(this);
+            showHome();
+            // setPageHeader('Home');
+        });
+        document.getElementById('nav-enrolled').addEventListener('click', function (e) {
+            e.preventDefault();
+            setActiveNav(this);
+            showEnrolled();
+            // setPageHeader('Enrolled');
+        });
+        document.getElementById('nav-todo').addEventListener('click', function (e) {
+            e.preventDefault();
+            setActiveNav(this);
+            showToDo();
+            // setPageHeader('To-Do');
+        });
+        document.getElementById('nav-result').addEventListener('click', function (e) {
+            e.preventDefault();
+            setActiveNav(this);
+            showResult();
+            // setPageHeader('Result');
+        });
+        function setActiveNav(element) {
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function showHome() {
+            document.getElementById('dashboard-main').innerHTML = `
+                <div class="dashboard-header">
+                    <span style="font-size: 2rem; font-weight: 700; letter-spacing: 1px;">Home</span>
+                    <a href="join-class.html" class="join-class-btn"> <i class="fas fa-plus"></i> Join Class</a>
+                </div>
+                <div class="class-list" id="classList">
+                    <div class="loading">Loading classes...</div>
+                </div>
+            `;
+            loadClasses('classList');
+        }
+
+        function showEnrolled() {
+            document.getElementById('dashboard-main').innerHTML = `
+                <div class="dashboard-header" style="background: #1976d2; color: #fff; border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 2rem; display: flex; align-items: center;">
+                    <span style="font-size: 2rem; font-weight: 700; letter-spacing: 1px;">Enrolled</span>
+                </div>
+                <div class="class-list" id="enrolledList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+                    <div class="loading">Loading classes...</div>
+                </div>
+            `;
+            loadClasses('enrolledList');
+        }
+
+        function showToDo() {
+            document.getElementById('dashboard-main').innerHTML = `
+                <div class="dashboard-header" style="background: #1976d2; color: #fff; border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 2rem; display: flex; align-items: center;">
+                    <span style="font-size: 2rem; font-weight: 700; letter-spacing: 1px;">To-Do</span>
+                </div>
+                <div class="todo-list" id="todoList" style="display: flex; flex-direction: column; gap: 2rem;"></div>
+            `;
+            loadToDo();
+        }
+        async function loadToDo() {
+            try {
+                // Get enrolled classes
+                const classesResponse = await fetch('/api/classroom/my', { headers: getAuthHeaders() });
+                const classes = await classesResponse.json();
+                if (!classes || classes.length === 0) {
+                    document.getElementById('todoList').innerHTML = '<div class="no-assignments">No classes enrolled yet.</div>';
+                    return;
+                }
+                let todoHtml = '';
+                for (const cls of classes) {
+                    // Get assignments for this class
+                    const assignmentsResponse = await fetch(`/api/post?classID=${cls._id}`, { headers: getAuthHeaders() });
+                    const posts = await assignmentsResponse.json();
+                    const assignments = posts.filter(p => p.type === 'assignment');
+                    // Get student's submissions for this class
+                    const submissionsResponse = await fetch(`/api/assignment/student-submissions?classID=${cls._id}`, { headers: getAuthHeaders() });
+                    const submissions = await submissionsResponse.json();
+                    // Create submission map for easy lookup
+                    const submissionMap = {};
+                    submissions.forEach(s => { submissionMap[s.assignmentID] = s; });
+                    // Sort assignments by due date
+                    assignments.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+                    if (assignments.length > 0) {
+                        todoHtml += `
+                            <div class="todo-class-card">
+                                <div class="todo-class-title">${cls.className}</div>
+                                <div class="todo-assignments">
+                                    ${assignments.map(assignment => {
+                            const submission = submissionMap[assignment._id];
+                            const dueDate = new Date(assignment.dueDate);
+                            const now = new Date();
+                            let status = '';
+                            let statusClass = '';
+                            if (submission) {
+                                status = 'Done';
+                                statusClass = 'todo-status-done';
+                            } else if (dueDate < now) {
+                                status = 'Missing';
+                                statusClass = 'todo-status-missing';
+                            } else {
+                                status = 'Pending';
+                                statusClass = 'todo-status-pending';
+                            }
+                            return `<div class="todo-assignment-line"><span class="todo-assignment-name">${assignment.content}</span> <span class="todo-assignment-due">(Due: ${dueDate.toLocaleString()})</span> - <span class="${statusClass}">${status}</span></div>`;
+                        }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                document.getElementById('todoList').innerHTML = todoHtml || '<div class="no-assignments">No assignments found in any class.</div>';
+            } catch (error) {
+                console.error('Error loading To-Do:', error);
+                document.getElementById('todoList').innerHTML = '<div class="error">Failed to load To-Do. Please try again.</div>';
+            }
+        }
+        async function showResult() {
+            const userResponse = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+            const user = await userResponse.json();
+
+            let seatNumber = user.seatNumber;
+            try {
+                const classesResponse = await fetch('/api/classroom/my', { headers: getAuthHeaders() });
+                const classes = await classesResponse.json();
+                for (const cls of classes) {
+                    const submissionsResponse = await fetch(`/api/assignment/student-submissions?classID=${cls._id}`, { headers: getAuthHeaders() });
+                    const submissions = await submissionsResponse.json();
+                    if (submissions && submissions.length > 0 && submissions[0].studentID && submissions[0].studentID.seatNumber) {
+                        seatNumber = submissions[0].studentID.seatNumber;
+                        break;
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching seat number from submission:", err);
+            }
+
+            document.getElementById('dashboard-main').innerHTML = `
+                <div class="result-container">
+                    <div class="student-info-card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin:2.5rem auto 2rem auto; max-width:600px; width:100%; background:#fff; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.13); border-left:8px solid #1976d2; padding:2.2rem 2.8rem;">
+                        <div style="font-size:1.25rem; font-weight:700; color:#1976d2; margin-bottom:1.1rem; text-align:center;">Student Information</div>
+                        <div style="display:flex; width:100%; justify-content:space-between; align-items:center; gap:2rem;">
+                            <span style="font-size:1.15rem; font-weight:500; color:#222;"><span style='color:#222; font-weight:600;'>Student Name:</span> <span style='color:#1976d2; font-weight:600;'>${user.fullName || user.name}</span></span>
+                            <span style="font-size:1.15rem; font-weight:500; color:#222;"><span style='color:#222; font-weight:600;'>Seat Number:</span> <span style='color:#1976d2; font-weight:600;'>${seatNumber && seatNumber.trim() !== '' ? seatNumber : 'Not assigned'}</span></span>
+                        </div>
+                    </div>
+                    <div class="class-results class-grid" id="classResults">
+                        <div class="loading">Loading results...</div>
+                    </div>
+                </div>
+            `;
+
+            loadStudentResults();
+        }
+
+        async function loadStudentResults() {
+            try {
+                // Get student information
+                const userResponse = await fetch('/api/auth/me', {
+                    headers: getAuthHeaders()
+                });
+                const user = await userResponse.json();
+                console.log('Student user object:', user);
+
+                // Display student information
+                // (No longer needed: info-grid)
+
+                // Get enrolled classes
+                const classesResponse = await fetch('/api/classroom/my', {
+                    headers: getAuthHeaders()
+                });
+                const classes = await classesResponse.json();
+
+                if (!classes || classes.length === 0) {
+                    document.getElementById('classResults').innerHTML = '<div class="no-assignments">No classes enrolled yet.</div>';
+                    return;
+                }
+
+                let classResultsHtml = '';
+                for (const cls of classes) {
+                    // Get assignments for this class
+                    const assignmentsResponse = await fetch(`/api/post?classID=${cls._id}`, {
+                        headers: getAuthHeaders()
+                    });
+                    const posts = await assignmentsResponse.json();
+                    const assignments = posts.filter(p => p.type === 'assignment');
+
+                    // Get student's submissions for this class
+                    const submissionsResponse = await fetch(`/api/assignment/student-submissions?classID=${cls._id}`, {
+                        headers: getAuthHeaders()
+                    });
+                    const submissions = await submissionsResponse.json();
+
+                    // Create submission map for easy lookup
+                    const submissionMap = {};
+                    submissions.forEach(s => {
+                        submissionMap[s.assignmentID] = s;
+                    });
+
+                    // Sort assignments by due date
+                    assignments.sort((a, b) => {
+                        return new Date(a.dueDate) - new Date(b.dueDate);
+                    });
+
+                    if (assignments.length > 0) {
+                        classResultsHtml += `
+                            <div class="class-card">
+                                <div class="class-header">
+                                    <h3 class="class-title" style="color:#1976d2;">${cls.className}</h3>
+                                </div>
+                                <table class="result-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Assignment</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Marks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${assignments.map(assignment => {
+                            const submission = submissionMap[assignment._id];
+                            const dueDate = new Date(assignment.dueDate);
+                            const now = new Date();
+                            let status = '';
+                            let marks = '';
+
+                            if (submission) {
+                                status = '<span class="status status-submitted">Submitted</span>';
+                                marks = submission.marks !== undefined ?
+                                    `<span class="marks">${submission.marks}</span> <span class="total-marks">/ ${assignment.totalMarks}</span>` :
+                                    'Pending Review';
+                            } else if (dueDate < now) {
+                                status = '<span class="status status-missing">Missing</span>';
+                                marks = `<span class="marks">0</span> <span class="total-marks">/ ${assignment.totalMarks}</span>`;
+                            } else {
+                                status = '<span class="status status-pending">Pending</span>';
+                                marks = '-';
+                            }
+
+                            return `
+                                                <tr>
+                                                    <td>${assignment.content}</td>
+                                                    <td>${dueDate.toLocaleDateString()}</td>
+                                                    <td>${status}</td>
+                                                    <td>${marks}</td>
+                                                </tr>
+                                            `;
+                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
+                }
+
+                document.getElementById('classResults').innerHTML = classResultsHtml || '<div class="no-assignments">No assignments found in any class.</div>';
+            } catch (error) {
+                console.error('Error loading results:', error);
+                document.getElementById('classResults').innerHTML = '<div class="error">Failed to load results. Please try again.</div>';
+            }
+        }
+
+        // Load student classes into a given element
+        function loadClasses(listId) {
+            fetch('/api/classroom/my', {
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('learnify_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(classes => {
+                    if (!classes) return;
+
+                    const classList = document.getElementById(listId);
+                    if (classes.length === 0) {
+                        classList.innerHTML = '<div class="no-classes">No classes enrolled yet. Join a class to get started!</div>';
+                    } else {
+                        classList.innerHTML = '';
+                        classes.forEach(cls => {
+                            // Only show leave button in Home page (classList)
+                            const leaveButton = listId === 'classList' ?
+                                `<button class="leave-class-icon-btn" onclick="leaveClass('${cls._id}')" title="Leave Class"><i class="fas fa-sign-out-alt"></i></button>` : '';
+
+                            classList.innerHTML += `
+                                <div class="class-card">
+                                    <div class="class-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <h4 class="class-title" style="margin: 0 0 0.5rem 0; color: #1976d2;">${cls.className}</h4>
+                                        ${leaveButton}
+                                    </div>
+                                    <div class="class-meta" style="color: #555; font-size: 1.02em;">
+                                        Subject: <b>${cls.subject || 'Not specified'}</b><br>
+                                        Section: <b>${cls.section || 'Not specified'}</b><br>
+                                        Class Code: <b>${cls.classCode}</b>
+                                    </div>
+                                    <a href="class.html?id=${cls._id}" class="view-class-link" style="color: #43a047; text-decoration: none; font-weight: 500; margin-top: 0.5rem;">&rarr; View Class</a>
+                                </div>
+                            `;
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading classes:', err);
+                    document.getElementById(listId).innerHTML = '<div class="error">Error loading classes. Please try again.</div>';
+                });
+        }
+
+        // Initial load
+        showHome();
+
+        function leaveClass(classId) {
+            if (confirm('Are you sure you want to leave this class? All related assignments will be removed.')) {
+                fetch(`/api/classroom/leave`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ classId })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload whichever section is currently shown
+                            if (document.getElementById('classList')) loadClasses('classList');
+                            if (document.getElementById('enrolledList')) loadClasses('enrolledList');
+                            if (document.getElementById('classResults')) loadStudentResults();
+                            // Also reload home if we're on the home page
+                            if (document.querySelector('.dashboard-main').innerHTML.includes('Student Information')) {
+                                showHome();
+                            }
+                        } else {
+                            alert('Failed to leave class: ' + data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error leaving class:', err);
+                        alert('Error leaving class. Please try again.');
+                    });
+            }
+        }
+
+        function confirmLeaveClass(classId) {
+            if (confirm('Are you sure you want to leave this class? All related assignments will be removed.')) {
+                leaveClass(classId);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you  logout?')) {
+                localStorage.removeItem('learnify_token');
+                window.location.href = '/index.html';
+            }
+        }
+    </script>
+    <style>
+        .leave-class-icon-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #f57c00;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 50%;
+            opacity: 0.7;
+            transition: color 0.18s, background 0.18s, opacity 0.18s;
+            z-index: 2;
+        }
+
+        .class-card {
+            position: relative;
+        }
+
+        .class-card:hover .leave-class-icon-btn {
+            opacity: 1;
+            color: #e65100;
+            background: #f5f5f5;
+        }
+
+        .leave-class-icon-btn:hover {
+            color: #fff;
+            background: #e65100;
+            opacity: 1;
+        }
+    </style>
+</body>
+
+</html>

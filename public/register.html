@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Learnify</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="centered">
+        <form class="login-form" id="registerForm">
+            <h2>Register for Learnify</h2>
+            <div id="register-error" class="error-message"></div>
+            <input type="text" name="fullName" placeholder="Full Name" required>
+            <input type="text" name="username" placeholder="Username" required>
+            <div>
+                <label><input type="radio" name="gender" value="male" required> Male</label>
+                <label><input type="radio" name="gender" value="female" required> Female</label>
+            </div>
+            <select name="role" id="roleSelect" required>
+                <option value="">Select Role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+            <div id="seatNumberDiv" style="display:none;">
+                <input type="text" name="seatNumber" id="seatNumberInput" placeholder="Seat Number" autocomplete="off">
+            </div>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+            <button type="submit">Register</button>
+            <p>Already have an account? <a href="index.html">Login</a></p>
+        </form>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // Show/hide seat number input based on role
+        const roleSelect = document.getElementById('roleSelect');
+        const seatNumberInput = document.getElementById('seatNumberInput');
+        const seatNumberDiv = document.getElementById('seatNumberDiv');
+
+        if (roleSelect && seatNumberInput) {
+            roleSelect.addEventListener('change', function () {
+                if (this.value === 'student') {
+                    seatNumberDiv.style.display = '';
+                    seatNumberInput.required = true;
+                } else {
+                    seatNumberDiv.style.display = 'none';
+                    seatNumberInput.required = false;
+                    seatNumberInput.value = '';
+                }
+            });
+        }
+        // Ensure correct initial state
+        if (roleSelect.value === 'student') {
+            seatNumberDiv.style.display = '';
+            seatNumberInput.required = true;
+        }
+    </script>
+</body>
+
+</html>
