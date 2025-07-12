@@ -2,10 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const cors = require('cors');
 const User = require('./models/User');
 const authRoutes = require('./routes/auth');
 
 const app = express();
+app.use(cors());
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'learnifysecret';
