@@ -9,8 +9,7 @@ const userSchema = new mongoose.Schema({
     passwordHash: { type: String, required: true },
     seatNumber: {
         type: String,
-        required: function () { return this.role === 'student'; },
-        unique: function () { return this.role === 'student'; },
+        required: function () { return this.role === 'student'; }
     }
 });
 

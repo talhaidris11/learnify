@@ -124,6 +124,13 @@ app.post('/register', async (req, res) => {
             console.log('[REGISTER] Username already exists:', username);
             return res.json({ success: false, message: 'Username already exists.' });
         }
+        // For students, check seat number uniqueness
+        if (role === 'student') {
+            const seatExists = await User.findOne({ seatNumber });
+            if (seatExists) {
+                return res.json({ success: false, message: 'Seat number already exists.' });
+            }
+        }
 
         const userData = { fullName, username, gender, role };
         if (role === 'student') {
