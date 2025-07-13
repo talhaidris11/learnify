@@ -1,24 +1,7 @@
 // Backend URL configuration - automatically detects environment
-const BACKEND_URL = (() => {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    const port = window.location.port;
-
-    // Local development
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:3000';
-    }
-
-    // If running on same domain as backend (e.g., both frontend and backend on same server)
-    if (port && port !== '80' && port !== '443') {
-        return `${protocol}//${hostname}:${port}`;
-    }
-
-    // Default to your deployed backend URL
-    return 'https://learnify-y02m.onrender.com';
-})();
-
-console.log('Backend URL:', BACKEND_URL);
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://learnify-y02m.onrender.com';
 
 // Global fetch wrapper for better error messages
 async function safeFetch(url, options) {
@@ -89,6 +72,14 @@ window.onload = function () {
             e.preventDefault();
             let errorElement = document.getElementById('register-error');
             errorElement.textContent = '';
+            errorElement.style.color = '#f44336';
+
+            // Show loading state
+            const submitBtn = registerForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Registering...';
+            submitBtn.disabled = true;
+
             const formData = new FormData(registerForm);
             const payload = {};
             for (let [key, value] of formData.entries()) {
@@ -99,13 +90,21 @@ window.onload = function () {
             if (formData.get('role') === 'student') {
                 payload.seatNumber = formData.get('seatNumber');
             }
+
+            console.log('Sending registration payload:', payload);
+
             try {
                 const res = await fetch(`${BACKEND_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
+                console.log('Registration response status:', res.status);
+
                 const data = await res.json();
+                console.log('Registration response data:', data);
+
                 if (data.success && data.token) {
                     // Registration successful, store token and redirect immediately
                     localStorage.setItem('learnify_token', data.token);
@@ -115,12 +114,15 @@ window.onload = function () {
                         window.location.href = data.redirect;
                     }, 1000);
                 } else {
-                    errorElement.style.color = '#f44336';
                     errorElement.textContent = data.message || 'Registration failed.';
                 }
             } catch (err) {
-                errorElement.style.color = '#f44336';
-                errorElement.textContent = 'Could not connect to server.';
+                console.error('Registration error:', err);
+                errorElement.textContent = 'Could not connect to server. Please check your internet connection and try again.';
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
     }

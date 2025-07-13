@@ -1,84 +1,50 @@
 # Learnify Deployment Guide
 
-## Common Issues and Solutions
+## Environment Variables Required
 
-### 1. MongoDB Connection Issues
+Set these environment variables on your live server:
 
-**Problem**: App can't connect to MongoDB on live server
-**Solution**: 
-- Set up a MongoDB Atlas cluster (free tier available)
-- Update your `MONGODB_URI` environment variable:
-  ```
-  MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/learnify
-  ```
-
-### 2. CORS Issues
-
-**Problem**: Frontend can't communicate with backend
-**Solution**:
-- Update the `FRONTEND_URL` environment variable with your actual frontend domain
-- Or modify the CORS configuration in `server.js` to include your domain
-
-### 3. Environment Variables
-
-**Required for live deployment**:
 ```bash
+# MongoDB Connection String (required)
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/learnify
+
+# JWT Secret (required - use a secure random string)
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Node Environment
 NODE_ENV=production
-JWT_SECRET=your-secure-random-string
-MONGODB_URI=your-mongodb-connection-string
-FRONTEND_URL=your-frontend-domain
+
+# Port (optional, defaults to 3000)
+PORT=3000
 ```
 
-### 4. Port Configuration
+## Common Issues & Solutions
 
-**Problem**: App not accessible on live server
-**Solution**:
-- Most hosting platforms (Render, Heroku, Railway) automatically set the `PORT` environment variable
-- The app will use `process.env.PORT` or default to 3000
+### 1. Registration Fails
+- **Check MongoDB Connection**: Ensure `MONGODB_URI` is set correctly
+- **Check JWT Secret**: Ensure `JWT_SECRET` is set
+- **Check Logs**: Look for error messages in server logs
 
-### 5. File Upload Issues
+### 2. CORS Issues
+- The server is configured to accept requests from:
+  - Production: `https://learnify-y02m.onrender.com`
+  - Development: `http://localhost:3000`, `http://127.0.0.1:3000`
 
-**Problem**: File uploads not working
-**Solution**:
-- Ensure the `uploads/` directory exists and has write permissions
-- For cloud hosting, consider using cloud storage (AWS S3, Cloudinary) instead of local storage
+### 3. Database Connection Issues
+- Ensure MongoDB Atlas (or your MongoDB provider) allows connections from your server's IP
+- Check if the MongoDB URI includes username, password, and database name
 
-## Platform-Specific Deployment
+## Testing Registration
 
-### Render.com
-1. Connect your GitHub repository
-2. Set environment variables in the dashboard
-3. Build command: `npm install`
-4. Start command: `npm start`
+1. Check server health: `GET /health`
+2. Check MongoDB connection status in the response
+3. Try registration with valid data
+4. Check server logs for detailed error messages
 
-### Heroku
-1. Install Heroku CLI
-2. Create app: `heroku create your-app-name`
-3. Set environment variables: `heroku config:set MONGODB_URI=your-uri`
-4. Deploy: `git push heroku main`
+## Debug Steps
 
-### Railway
-1. Connect your GitHub repository
-2. Set environment variables in the dashboard
-3. Deploy automatically
-
-## Testing Your Deployment
-
-1. **Health Check**: Visit `https://your-domain.com/health`
-2. **Database Connection**: Check server logs for MongoDB connection status
-3. **CORS**: Open browser dev tools and check for CORS errors
-4. **Authentication**: Test registration and login functionality
-
-## Debugging Tips
-
-1. Check server logs for error messages
-2. Use browser dev tools to see network requests
-3. Verify environment variables are set correctly
-4. Test API endpoints directly with tools like Postman
-
-## Common Error Messages
-
-- `MongoDB connection failed`: Check your `MONGODB_URI`
-- `Not allowed by CORS`: Update CORS configuration or `FRONTEND_URL`
-- `JWT_SECRET not set`: Set the `JWT_SECRET` environment variable
-- `Port already in use`: The hosting platform should handle this automatically 
+1. Check if MongoDB is connected by visiting `/health` endpoint
+2. Look at server logs for registration attempts
+3. Verify all required fields are being sent from frontend
+4. Check if JWT_SECRET is properly set
+5. Ensure CORS is configured for your domain 

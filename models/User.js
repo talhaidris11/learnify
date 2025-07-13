@@ -23,4 +23,7 @@ userSchema.methods.validatePassword = async function (password) {
     return bcrypt.compare(password, this.passwordHash);
 };
 
+// Alias for compatibility with authController
+userSchema.methods.comparePassword = userSchema.methods.validatePassword;
+
 module.exports = mongoose.model('User', userSchema); 

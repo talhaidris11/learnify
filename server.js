@@ -8,35 +8,11 @@ const authRoutes = require('./routes/auth');
 const fs = require('fs');
 
 const app = express();
-
-// Enhanced CORS configuration for live server
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        // Allow localhost for development
-        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-            return callback(null, true);
-        }
-
-        // Allow your live server domains
-        const allowedOrigins = [
-            'https://learnify-y02m.onrender.com',
-            'https://learnify11.netlify.app', // Your Netlify frontend domain
-            'https://your-live-domain.com', // Add your actual live domain here
-            process.env.FRONTEND_URL // Allow environment variable for frontend URL
-        ].filter(Boolean);
-
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-
-        callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    origin: process.env.NODE_ENV === 'production'
+        ? ['https://learnify-y02m.onrender.com', 'https://your-frontend-domain.com']
+        : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    credentials: true
 }));
 
 // JWT Secret
@@ -78,24 +54,16 @@ function verifyToken(req, res, next) {
     }
 }
 
-// Connect to MongoDB with better error handling for live server
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/learnify';
-console.log('Attempting to connect to MongoDB...');
-
-mongoose.connect(MONGODB_URI, {
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/learnify', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
 })
-    .then(() => {
-        console.log('✅ Connected to MongoDB successfully');
-        console.log('Database:', mongoose.connection.name);
-    })
+    .then(() => console.log('Connected to MongoDB'))
     .catch((err) => {
-        console.error('❌ MongoDB connection failed:', err.message);
-        console.log('Note: Registration and login will not work without MongoDB running.');
-        console.log('Please ensure your MONGODB_URI environment variable is set correctly for live deployment.');
+        console.error('MongoDB connection failed:', err.message);
+        console.error('MongoDB URI:', process.env.MONGODB_URI || 'mongodb://localhost:27017/learnify');
+        console.error('Note: Registration and login will not work without MongoDB running.');
     });
 
 // Middleware to check authentication
@@ -124,25 +92,37 @@ app.post('/register', async (req, res) => {
     console.log('[REGISTER] Incoming:', { fullName, username, gender, role, seatNumber });
 
     if (!fullName || !username || !gender || !role || !password || !confirmPassword) {
+        console.log('[REGISTER] Missing required fields');
         return res.json({ success: false, message: 'All fields are required.' });
     }
 
     if (password !== confirmPassword) {
+        console.log('[REGISTER] Passwords do not match');
         return res.json({ success: false, message: 'Passwords do not match.' });
     }
 
     try {
+        // Check if MongoDB is connected
+        if (mongoose.connection.readyState !== 1) {
+            console.error('[REGISTER] MongoDB not connected. State:', mongoose.connection.readyState);
+            return res.json({ success: false, message: 'Database connection error. Please try again.' });
+        }
+
         const exists = await User.findOne({ username });
-        if (exists) return res.json({ success: false, message: 'Username already exists.' });
+        if (exists) {
+            console.log('[REGISTER] Username already exists:', username);
+            return res.json({ success: false, message: 'Username already exists.' });
+        }
 
         const userData = { fullName, username, gender, role };
         if (role === 'student' && seatNumber) {
             userData.seatNumber = seatNumber;
         }
+
         const user = new User(userData);
         await user.setPassword(password);
         await user.save();
-        console.log('[REGISTER] Saved user:', user);
+        console.log('[REGISTER] Saved user:', user._id);
 
         // Generate JWT token for immediate login
         const token = jwt.sign(
@@ -155,7 +135,7 @@ app.post('/register', async (req, res) => {
             JWT_SECRET,
             { expiresIn: '7d' }
         );
-        console.log('[REGISTER] JWT payload:', { userId: user._id, role: user.role, fullName: user.fullName, username: user.username });
+        console.log('[REGISTER] JWT generated successfully');
 
         // Return success with token for immediate login
         res.json({
@@ -165,8 +145,18 @@ app.post('/register', async (req, res) => {
             redirect: role === 'teacher' ? '/dashboard-teacher.html' : '/dashboard-student.html'
         });
     } catch (err) {
-        console.error('Registration error:', err);
-        res.json({ success: false, message: 'Registration failed.' });
+        console.error('[REGISTER] Error:', err.message);
+        console.error('[REGISTER] Stack:', err.stack);
+
+        // Provide more specific error messages
+        if (err.code === 11000) {
+            return res.json({ success: false, message: 'Username or seat number already exists.' });
+        }
+        if (err.name === 'ValidationError') {
+            return res.json({ success: false, message: 'Validation error: ' + Object.values(err.errors).map(e => e.message).join(', ') });
+        }
+
+        res.json({ success: false, message: 'Registration failed. Please try again.' });
     }
 });
 
@@ -176,12 +166,24 @@ app.post('/login', async (req, res) => {
     console.log('[LOGIN] Attempt:', { username });
 
     try {
+        // Check if MongoDB is connected
+        if (mongoose.connection.readyState !== 1) {
+            console.error('[LOGIN] MongoDB not connected. State:', mongoose.connection.readyState);
+            return res.json({ success: false, message: 'Database connection error. Please try again.' });
+        }
+
         const user = await User.findOne({ username });
-        if (!user) return res.json({ success: false, message: 'Incorrect username or password.' });
-        console.log('[LOGIN] Found user:', user);
+        if (!user) {
+            console.log('[LOGIN] User not found:', username);
+            return res.json({ success: false, message: 'Incorrect username or password.' });
+        }
+        console.log('[LOGIN] Found user:', user._id);
 
         const valid = await user.validatePassword(password);
-        if (!valid) return res.json({ success: false, message: 'Incorrect username or password.' });
+        if (!valid) {
+            console.log('[LOGIN] Invalid password for user:', username);
+            return res.json({ success: false, message: 'Incorrect username or password.' });
+        }
 
         // Generate JWT token
         const token = jwt.sign(
@@ -194,7 +196,7 @@ app.post('/login', async (req, res) => {
             JWT_SECRET,
             { expiresIn: '7d' }
         );
-        console.log('[LOGIN] JWT payload:', { userId: user._id, role: user.role, fullName: user.fullName, username: user.username });
+        console.log('[LOGIN] JWT generated successfully');
 
         // Redirect based on role - FIXED LOGIC
         let redirect = '/dashboard-student.html';
@@ -203,8 +205,9 @@ app.post('/login', async (req, res) => {
         }
         res.json({ success: true, redirect, token });
     } catch (err) {
-        console.error('Login error:', err);
-        res.json({ success: false, message: 'Login failed.' });
+        console.error('[LOGIN] Error:', err.message);
+        console.error('[LOGIN] Stack:', err.stack);
+        res.json({ success: false, message: 'Login failed. Please try again.' });
     }
 });
 
@@ -229,41 +232,23 @@ app.use('/api/assignment', require('./routes/assignment'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+    const mongoState = mongoose.connection.readyState;
+    const mongoStatus = {
+        0: 'Disconnected',
+        1: 'Connected',
+        2: 'Connecting',
+        3: 'Disconnecting'
+    }[mongoState] || 'Unknown';
+
     res.json({
-        status: 'OK',
-        mongoStatus: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        status: mongoState === 1 ? 'OK' : 'ERROR',
+        mongoStatus: mongoStatus,
+        mongoState: mongoState,
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        port: process.env.PORT || 3000
-    });
-});
-
-// API status endpoint
-app.get('/api/status', (req, res) => {
-    res.json({
-        success: true,
-        message: 'API is running',
-        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-        timestamp: new Date().toISOString()
-    });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Error:', err);
-
-    if (err.message === 'Not allowed by CORS') {
-        return res.status(403).json({
-            success: false,
-            message: 'CORS error: Request not allowed from this origin',
-            origin: req.headers.origin
-        });
-    }
-
-    res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+        backendUrl: process.env.NODE_ENV === 'production' ? 'https://learnify-y02m.onrender.com' : 'http://localhost:3000',
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        hasMongoUri: !!process.env.MONGODB_URI
     });
 });
 
@@ -272,13 +257,6 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server with better logging for live deployment
+// Start server
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
-
-app.listen(PORT, HOST, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 Local: http://localhost:${PORT}`);
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 MongoDB: ${MONGODB_URI.includes('localhost') ? 'Local' : 'Remote'}`);
-}); 
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`)); 

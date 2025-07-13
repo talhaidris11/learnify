@@ -15,8 +15,8 @@
             <input type="text" name="fullName" placeholder="Full Name" required>
             <input type="text" name="username" placeholder="Username" required>
             <div>
-                <label><input type="radio" name="gender" value="male" required> Male</label>
-                <label><input type="radio" name="gender" value="female" required> Female</label>
+                <label><input type="radio" name="gender" value="male"> Male</label>
+                <label><input type="radio" name="gender" value="female"> Female</label>
             </div>
             <select name="role" id="roleSelect" required>
                 <option value="">Select Role</option>
@@ -56,6 +56,54 @@
             seatNumberDiv.style.display = '';
             seatNumberInput.required = true;
         }
+
+        // Add form validation
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            const formData = new FormData(this);
+            const errorElement = document.getElementById('register-error');
+
+            // Check if gender is selected
+            const gender = formData.get('gender');
+            if (!gender) {
+                e.preventDefault();
+                errorElement.textContent = 'Please select a gender.';
+                errorElement.style.color = '#f44336';
+                return false;
+            }
+
+            // Check if role is selected
+            const role = formData.get('role');
+            if (!role) {
+                e.preventDefault();
+                errorElement.textContent = 'Please select a role.';
+                errorElement.style.color = '#f44336';
+                return false;
+            }
+
+            // Check if seat number is provided for students
+            if (role === 'student') {
+                const seatNumber = formData.get('seatNumber');
+                if (!seatNumber || seatNumber.trim() === '') {
+                    e.preventDefault();
+                    errorElement.textContent = 'Please enter a seat number for students.';
+                    errorElement.style.color = '#f44336';
+                    return false;
+                }
+            }
+
+            // Check if passwords match
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                errorElement.textContent = 'Passwords do not match.';
+                errorElement.style.color = '#f44336';
+                return false;
+            }
+
+            // Clear any previous errors
+            errorElement.textContent = '';
+        });
     </script>
 </body>
 
