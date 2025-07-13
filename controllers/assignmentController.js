@@ -106,19 +106,28 @@ exports.getSubmissionsToReview = async (req, res) => {
             type: 'assignment'
         }).populate('classID', 'className');
 
-        const submissions = await AssignmentSubmission.find({
-            assignmentID: { $in: assignments.map(a => a._id) }
-        })
-            .populate('studentID', 'fullName name seatNumber')
-            .populate({
-                path: 'assignmentID',
-                select: 'content totalMarks dueDate classID',
-                populate: { path: 'classID', select: 'className' }
-            })
-            .sort({ submittedAt: -1 });
+        // Use aggregation to get only the latest submission per student per assignment
+        const submissions = await AssignmentSubmission.aggregate([
+            { $match: { assignmentID: { $in: assignments.map(a => a._id) } } },
+            { $sort: { submittedAt: -1 } },
+            {
+                $group: {
+                    _id: { assignmentID: '$assignmentID', studentID: '$studentID' },
+                    doc: { $first: '$$ROOT' }
+                }
+            },
+            { $replaceRoot: { newRoot: '$doc' } }
+        ]);
+
+        // Populate studentID and assignmentID
+        const populatedSubmissions = await AssignmentSubmission.populate(submissions, [
+            { path: 'studentID', select: 'fullName name seatNumber' },
+            { path: 'assignmentID', select: 'content totalMarks dueDate classID', populate: { path: 'classID', select: 'className' } }
+        ]);
 
         const submissionsByAssignment = {};
-        submissions.forEach(sub => {
+        populatedSubmissions.forEach(sub => {
+            if (!sub.assignmentID || !sub.assignmentID._id) return;
             const aid = sub.assignmentID._id.toString();
             if (!submissionsByAssignment[aid]) submissionsByAssignment[aid] = [];
             submissionsByAssignment[aid].push({
