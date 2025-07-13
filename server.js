@@ -10,7 +10,10 @@ const fs = require('fs');
 const app = express();
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? ['https://learnify-y02m.onrender.com', 'https://your-frontend-domain.com']
+        ? [
+            'https://learnify-y02m.onrender.com',
+            'https://learnify11.netlify.app', // Netlify frontend
+        ]
         : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     credentials: true
 }));
@@ -91,11 +94,19 @@ app.post('/register', async (req, res) => {
     const { fullName, username, gender, role, password, confirmPassword, seatNumber } = req.body;
     console.log('[REGISTER] Incoming:', { fullName, username, gender, role, seatNumber });
 
+    // Validate required fields for both roles
     if (!fullName || !username || !gender || !role || !password || !confirmPassword) {
         console.log('[REGISTER] Missing required fields');
         return res.json({ success: false, message: 'All fields are required.' });
     }
-
+    // For students, seatNumber is required
+    if (role === 'student' && (!seatNumber || seatNumber.trim() === '')) {
+        return res.json({ success: false, message: 'Seat number is required for students.' });
+    }
+    // For teachers, seatNumber should not be required or saved
+    if (role === 'teacher' && seatNumber) {
+        console.log('[REGISTER] Teacher provided seatNumber, ignoring.');
+    }
     if (password !== confirmPassword) {
         console.log('[REGISTER] Passwords do not match');
         return res.json({ success: false, message: 'Passwords do not match.' });
@@ -115,9 +126,10 @@ app.post('/register', async (req, res) => {
         }
 
         const userData = { fullName, username, gender, role };
-        if (role === 'student' && seatNumber) {
+        if (role === 'student') {
             userData.seatNumber = seatNumber;
         }
+        // Do NOT set seatNumber for teachers
 
         const user = new User(userData);
         await user.setPassword(password);
