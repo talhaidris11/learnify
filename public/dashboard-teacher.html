@@ -313,8 +313,8 @@
                                                             <td>${item.assignmentTitle}</td>
                                                             <td>${sub.studentID.fullName}</td>
                                                             <td>${sub.studentID.seatNumber || 'Not assigned'}</td>
-                                                            <td><button onclick="previewFile('/uploads/${sub.file}', '${sub.file}')" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button></td>
-                                                            <td><a href="/uploads/${sub.file}" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a></td>
+                                                            <td><button onclick="previewFile('${BACKEND_URL}/uploads/${sub.file}', '${sub.file}')" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button></td>
+                                                            <td><a href="${BACKEND_URL}/uploads/${sub.file}" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a></td>
                                                             <td><div class="marks-input-group">
                                                                 <input type="number" 
                                                                     class="marks-input" 
