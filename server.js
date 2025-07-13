@@ -23,6 +23,7 @@ app.use(cors({
         // Allow your live server domains
         const allowedOrigins = [
             'https://learnify-y02m.onrender.com',
+            'https://learnify11.netlify.app', // Your Netlify frontend domain
             'https://your-live-domain.com', // Add your actual live domain here
             process.env.FRONTEND_URL // Allow environment variable for frontend URL
         ].filter(Boolean);
