@@ -817,10 +817,10 @@
             let fileHtml = '';
             if (post.file) {
                 fileHtml = `<div class="post-file">
-                    <a href="#" onclick="previewFile('/uploads/${post.file}', '${post.file}')" style="margin-right: 10px;">
+                    <a href="#" onclick="previewFile('${BACKEND_URL}/uploads/${post.file}', '${post.file}')" style="margin-right: 10px;">
                         <i class="fas fa-eye"></i> Preview
                     </a>
-                    <a href="/uploads/${post.file}" target="_blank">
+                    <a href="${BACKEND_URL}/uploads/${post.file}" target="_blank">
                         <i class="fas fa-download"></i> Download
                     </a>
                 </div>`;
@@ -1128,10 +1128,10 @@
                                         </div>
                                     </div>
                                     <div class="submission-actions">
-                                        <a href="/uploads/${submission.file}" target="_blank" class="btn btn-primary">
+                                        <a href="${BACKEND_URL}/uploads/${submission.file}" target="_blank" class="btn btn-primary">
                                             <i class="fas fa-download"></i> Download
                                         </a>
-                                        <a href="#" onclick="previewFile('/uploads/${submission.file}', '${submission.file}')" class="btn btn-primary" style="margin-left: 10px;">
+                                        <a href="#" onclick="previewFile('${BACKEND_URL}/uploads/${submission.file}', '${submission.file}')" class="btn btn-primary" style="margin-left: 10px;">
                                             <i class="fas fa-eye"></i> Preview
                                         </a>
                                 </div>
@@ -1174,6 +1174,10 @@
 
         // File Preview Functions
         window.previewFile = function (fileUrl, fileName) {
+            // Ensure fileUrl is absolute
+            if (!fileUrl.startsWith('http')) {
+                fileUrl = BACKEND_URL + fileUrl;
+            }
             const modal = document.getElementById('filePreviewModal');
             const title = document.getElementById('filePreviewTitle');
             const body = document.getElementById('filePreviewBody');
@@ -1245,6 +1249,9 @@
         };
 
         function showUnsupportedFile(fileUrl) {
+            if (!fileUrl.startsWith('http')) {
+                fileUrl = BACKEND_URL + fileUrl;
+            }
             const body = document.getElementById('filePreviewBody');
             body.innerHTML = `
                 <div class="file-preview-unsupported">
@@ -1331,7 +1338,7 @@
                     }
                     if (post.file) {
                         const fileLink = document.createElement('a');
-                        fileLink.href = `/uploads/${post.file}`;
+                        fileLink.href = `${BACKEND_URL}/uploads/${post.file}`;
                         fileLink.target = '_blank';
                         fileLink.textContent = `Current File: ${post.file}`;
                         editPostCurrentFileDiv.innerHTML = '';
