@@ -95,6 +95,7 @@
 
     <script src="script.js"></script>
     <script>
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         // Check authentication and role on page load
         if (!localStorage.getItem('learnify_token')) {
             window.location.href = '/index.html';
@@ -314,7 +315,10 @@
                                                             <td>${sub.studentID.fullName}</td>
                                                             <td>${sub.studentID.seatNumber || 'Not assigned'}</td>
                                                             <td><button onclick="previewFile('${BACKEND_URL}/uploads/${sub.file}', '${sub.file}')" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button></td>
-                                                            <td><button onclick="downloadFile('${BACKEND_URL}/uploads/${sub.file}', '${sub.file}')" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</button></td>
+                                                            <td>${isLocal ?
+                                        `<a href="${BACKEND_URL}/uploads/${sub.file}" download class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a>` :
+                                        `<button onclick="downloadFile('${BACKEND_URL}/uploads/${sub.file}', '${sub.file}')" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</button>`
+                                    }</td>
                                                             <td><div class="marks-input-group">
                                                                 <input type="number" 
                                                                     class="marks-input" 
