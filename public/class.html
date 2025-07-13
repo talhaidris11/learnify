@@ -1173,7 +1173,7 @@
         };
 
         // File Preview Functions
-        window.previewFile = function (fileUrl, fileName) {
+        window.previewFile = async function (fileUrl, fileName) {
             // Ensure fileUrl is absolute
             if (!fileUrl.startsWith('http')) {
                 fileUrl = BACKEND_URL + fileUrl;
@@ -1196,10 +1196,10 @@
             const fileExtension = fileName.split('.').pop().toLowerCase();
 
             // Handle different file types
-            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
+            if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(fileExtension)) {
                 // Image files
                 body.innerHTML = `
-                    <img src="${fileUrl}" alt="${fileName}" class="file-preview-image" onload="this.style.display='block'" onerror="showUnsupportedFile()">
+                    <img src="${fileUrl}" alt="${fileName}" class="file-preview-image" onload="this.style.display='block'" onerror="showUnsupportedFile('${fileUrl}')">
                     <div class="file-preview-actions">
                         <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
                             <i class="fas fa-external-link-alt"></i> Open in New Tab
@@ -1209,20 +1209,32 @@
                         </a>
                     </div>
                 `;
-            } else if (fileExtension === 'pdf') {
+            } else if (["pdf"].includes(fileExtension)) {
                 // PDF files
-                body.innerHTML = `
-                    <iframe src="${fileUrl}" class="file-preview-pdf"></iframe>
-                    <div class="file-preview-actions">
-                        <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
-                            <i class="fas fa-external-link-alt"></i> Open in New Tab
-                        </a>
-                        <a href="${fileUrl}" download class="file-preview-btn file-preview-btn-secondary">
-                            <i class="fas fa-download"></i> Download
-                        </a>
-                    </div>
-                `;
-            } else if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'csv'].includes(fileExtension)) {
+                try {
+                    const response = await fetch(fileUrl);
+                    const contentType = response.headers.get('content-type');
+                    if (!response.ok || (contentType && contentType.includes('text/html'))) {
+                        body.innerHTML = `<div class='file-preview-unsupported'><i class='fas fa-file-alt'></i><p style='color:#f44336'>File not found or cannot be previewed.</p></div>`;
+                        return;
+                    }
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    body.innerHTML = `
+                        <iframe src="${blobUrl}" width="100%" height="600px" style="border:none;"></iframe>
+                        <div class="file-preview-actions">
+                            <a href="${fileUrl}" target="_blank" class="file-preview-btn file-preview-btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Open in New Tab
+                            </a>
+                            <a href="${fileUrl}" download class="file-preview-btn file-preview-btn-secondary">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </div>
+                    `;
+                } catch (err) {
+                    body.innerHTML = `<div class='file-preview-unsupported'><i class='fas fa-file-alt'></i><p style='color:#f44336'>File not found or cannot be previewed.</p></div>`;
+                }
+            } else if (["txt", "md", "json", "js", "css", "html", "xml", "csv"].includes(fileExtension)) {
                 // Text files
                 fetch(fileUrl)
                     .then(response => response.text())
