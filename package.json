@@ -4,7 +4,9 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
-        "dev": "node server.js"
+        "dev": "nodemon server.js",
+        "build": "echo 'No build step required for Node.js app'",
+        "test": "echo 'No tests specified'"
     },
     "dependencies": {
         "bcrypt": "^6.0.0",
@@ -15,5 +17,11 @@
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.16.1",
         "multer": "^2.0.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.0"
+    },
+    "engines": {
+        "node": ">=16.0.0"
     }
 }

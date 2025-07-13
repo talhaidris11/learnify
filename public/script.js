@@ -1,7 +1,24 @@
 // Backend URL configuration - automatically detects environment
-const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000'
-    : 'https://learnify-y02m.onrender.com';
+const BACKEND_URL = (() => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const port = window.location.port;
+
+    // Local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:3000';
+    }
+
+    // If running on same domain as backend (e.g., both frontend and backend on same server)
+    if (port && port !== '80' && port !== '443') {
+        return `${protocol}//${hostname}:${port}`;
+    }
+
+    // Default to your deployed backend URL
+    return 'https://learnify-y02m.onrender.com';
+})();
+
+console.log('Backend URL:', BACKEND_URL);
 
 // Global fetch wrapper for better error messages
 async function safeFetch(url, options) {

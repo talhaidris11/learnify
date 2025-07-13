@@ -8,7 +8,35 @@ const authRoutes = require('./routes/auth');
 const fs = require('fs');
 
 const app = express();
-app.use(cors());
+
+// Enhanced CORS configuration for live server
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Allow localhost for development
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            return callback(null, true);
+        }
+
+        // Allow your live server domains
+        const allowedOrigins = [
+            'https://learnify-y02m.onrender.com',
+            'https://your-live-domain.com', // Add your actual live domain here
+            process.env.FRONTEND_URL // Allow environment variable for frontend URL
+        ].filter(Boolean);
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'learnifysecret';
@@ -49,12 +77,24 @@ function verifyToken(req, res, next) {
     }
 }
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/learnify')
-    .then(() => console.log('Connected to MongoDB'))
+// Connect to MongoDB with better error handling for live server
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/learnify';
+console.log('Attempting to connect to MongoDB...');
+
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+})
+    .then(() => {
+        console.log('✅ Connected to MongoDB successfully');
+        console.log('Database:', mongoose.connection.name);
+    })
     .catch((err) => {
-        console.log('MongoDB connection failed:', err.message);
+        console.error('❌ MongoDB connection failed:', err.message);
         console.log('Note: Registration and login will not work without MongoDB running.');
+        console.log('Please ensure your MONGODB_URI environment variable is set correctly for live deployment.');
     });
 
 // Middleware to check authentication
@@ -191,7 +231,38 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
         mongoStatus: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        port: process.env.PORT || 3000
+    });
+});
+
+// API status endpoint
+app.get('/api/status', (req, res) => {
+    res.json({
+        success: true,
+        message: 'API is running',
+        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
         timestamp: new Date().toISOString()
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+
+    if (err.message === 'Not allowed by CORS') {
+        return res.status(403).json({
+            success: false,
+            message: 'CORS error: Request not allowed from this origin',
+            origin: req.headers.origin
+        });
+    }
+
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
     });
 });
 
@@ -200,6 +271,13 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
+// Start server with better logging for live deployment
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`)); 
+const HOST = process.env.HOST || '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📱 Local: http://localhost:${PORT}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 MongoDB: ${MONGODB_URI.includes('localhost') ? 'Local' : 'Remote'}`);
+}); 
