@@ -3,30 +3,6 @@ const BACKEND_URL = window.location.hostname === 'localhost' || window.location.
     ? 'http://localhost:3000'
     : 'https://learnify-y02m.onrender.com';
 
-// Debug panel for development
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    window.addEventListener('DOMContentLoaded', () => {
-        const debugDiv = document.createElement('div');
-        debugDiv.style.position = 'fixed';
-        debugDiv.style.bottom = '10px';
-        debugDiv.style.right = '10px';
-        debugDiv.style.background = '#222';
-        debugDiv.style.color = '#fff';
-        debugDiv.style.padding = '10px 18px';
-        debugDiv.style.borderRadius = '8px';
-        debugDiv.style.fontSize = '0.95rem';
-        debugDiv.style.zIndex = '9999';
-        debugDiv.style.boxShadow = '0 2px 8px #0005';
-        debugDiv.innerHTML = `<b>DEBUG</b><br>BACKEND_URL: <span style='color:#4caf50'>${BACKEND_URL}</span><br><span id='api-status'>Checking API...</span>`;
-        document.body.appendChild(debugDiv);
-        fetch(`${BACKEND_URL}/health`).then(r => r.json()).then(data => {
-            document.getElementById('api-status').innerHTML = `API: <span style='color:#4caf50'>${data.status} (${data.mongoStatus})</span>`;
-        }).catch(() => {
-            document.getElementById('api-status').innerHTML = `<span style='color:#f44336'>API: Unreachable</span>`;
-        });
-    });
-}
-
 // Global fetch wrapper for better error messages
 async function safeFetch(url, options) {
     try {
