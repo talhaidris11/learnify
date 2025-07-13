@@ -21,6 +21,9 @@ const upload = multer({ storage: storage });
 // Create a new classroom
 router.post('/create', requireAuth, requireTeacher, upload.single('file'), async (req, res) => {
     try {
+        console.log('[CREATE CLASS] Request body:', req.body);
+        console.log('[CREATE CLASS] User:', req.user);
+
         // Support both JSON and multipart/form-data
         let className, subject, section, description;
         if (req.is('application/json')) {
@@ -34,23 +37,33 @@ router.post('/create', requireAuth, requireTeacher, upload.single('file'), async
             section = req.body.section;
             description = req.body.description;
         }
+
+        console.log('[CREATE CLASS] Parsed data:', { className, subject, section });
+
+        if (!className || !className.trim()) {
+            return res.status(400).json({ success: false, message: 'Class name is required' });
+        }
+
         const classCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const classroom = new Classroom({
-            className,
-            subject,
-            section,
+            className: className.trim(),
+            subject: subject ? subject.trim() : undefined,
+            section: section ? section.trim() : undefined,
             description,
             classCode,
             teacherID: req.user.userId,
             file: req.file ? req.file.filename : null
         });
 
+        console.log('[CREATE CLASS] Saving classroom:', classroom);
         await classroom.save();
+        console.log('[CREATE CLASS] Classroom saved successfully:', classroom._id);
+
         res.json({ success: true, classroom });
     } catch (err) {
         console.error('Error creating classroom:', err);
-        res.status(500).json({ success: false, message: 'Failed to create classroom.' });
+        res.status(500).json({ success: false, message: 'Failed to create classroom: ' + err.message });
     }
 });
 

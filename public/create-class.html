@@ -25,27 +25,53 @@
         if (!localStorage.getItem('learnify_token')) {
             window.location.href = '/index.html';
         }
+
         const form = document.getElementById('createClassForm');
+        const errorDiv = document.getElementById('create-class-error');
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // Clear previous errors
+            errorDiv.textContent = '';
+            errorDiv.style.color = '#f44336';
+
             const formData = new FormData(form);
             const className = formData.get('className');
             const section = formData.get('section');
             const subject = formData.get('subject');
+
+            if (!className.trim()) {
+                errorDiv.textContent = 'Class name is required';
+                return;
+            }
+
             const payload = { className, section, subject };
-            const res = await fetch('/api/classroom/create', {
-                method: 'POST',
-                headers: {
-                    ...getAuthHeaders(),
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (data.success) {
-                window.location.href = 'dashboard-teacher.html';
-            } else {
-                document.getElementById('create-class-error').textContent = data.message;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/classroom/create`, {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    errorDiv.style.color = '#43a047';
+                    errorDiv.textContent = 'Class created successfully! Redirecting...';
+                    setTimeout(() => {
+                        window.location.href = 'dashboard-teacher.html';
+                    }, 1000);
+                } else {
+                    errorDiv.textContent = data.message || 'Failed to create class';
+                }
+            } catch (err) {
+                console.error('Error creating class:', err);
+                errorDiv.textContent = 'Network error. Please try again.';
             }
         });
     </script>
