@@ -5,12 +5,24 @@ const path = require('path');
 const cors = require('cors');
 const User = require('./models/User');
 const authRoutes = require('./routes/auth');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'learnifysecret';
+
+// Explicit 404 for missing uploads
+app.get('/uploads/:filename', (req, res, next) => {
+    const filePath = path.join(__dirname, 'uploads', req.params.filename);
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            return res.status(404).send('File not found');
+        }
+        res.sendFile(filePath);
+    });
+});
 
 // Serve static files
 app.use(express.static('public'));
