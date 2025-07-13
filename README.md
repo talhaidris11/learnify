@@ -38,15 +38,11 @@ The app automatically detects your environment:
 - **Localhost/127.0.0.1** → Uses `http://localhost:3000` backend
 - **Any other domain** → Uses `https://learnify-y02m.onrender.com` backend
 
-### Testing Both Environments
+### Environment Detection
 
-1. **Test local environment:**
-   - Visit: `http://localhost:3000/test-env.html`
-   - Should show backend URL as `http://localhost:3000`
-
-2. **Test live environment:**
-   - Visit: `https://learnify11.netlify.app/test-env.html`
-   - Should show backend URL as `https://learnify-y02m.onrender.com`
+The app automatically detects your environment:
+- **Localhost/127.0.0.1** → Uses `http://localhost:3000` backend
+- **Any other domain** → Uses `https://learnify-y02m.onrender.com` backend
 
 ### Environment Variables (Optional)
 Create a `.env` file in the root directory:
